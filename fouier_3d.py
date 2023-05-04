@@ -1,3 +1,4 @@
+#%%
 """
 Adapted from Zongyi Li TODO: include referene in the README
 This file is the Fourier Neural Operator for 3D problem such as the Navier-Stokes equation discussed in Section 5.3 in the [paper](https://arxiv.org/pdf/2010.08895.pdf),
@@ -83,10 +84,10 @@ class FNO3d(nn.Module):
             W defined by self.w; K defined by self.conv .
         3. Project from the channel space to the output space by self.fc1 and self.fc2 .
         
-        input: the solution of the first 10 timesteps + 3 locations (u(1, x, y), ..., u(10, x, y),  x, y, t). It's a constant function in time, except for the last index.
-        input shape: (batchsize, x=64, y=64, t=40, c=13)
+        input: the solution of the first 61 timesteps + 3 locations (u(1, x, y), ..., u(10, x, y),  x, y, t). It's a constant function in time, except for the last index.
+        input shape: (batchsize, x=32, y=32, t=61, c=6)
         output: the solution of the next 40 timesteps
-        output shape: (batchsize, x=64, y=64, t=40, c=1)
+        output shape: (batchsize, x=32, y=32, t=61, c=1)
         """
 
         self.modes1 = modes1
@@ -95,7 +96,7 @@ class FNO3d(nn.Module):
         self.width = width
         self.padding = 6 # pad the domain if input is non-periodic
 
-        self.p = nn.Linear(13, self.width)# input channel is 12: the solution of the first 10 timesteps + 3 locations (u(1, x, y), ..., u(10, x, y),  x, y, t)
+        self.p = nn.Linear(6, self.width)# input channel is 6: the solution of the first 10 timesteps + 3 locations (u(1, x, y), ..., u(61, x, y),  x, y, t)
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -187,6 +188,9 @@ path_train_err = 'results/'+path+'train.txt'
 path_test_err = 'results/'+path+'test.txt'
 path_image = 'image/'+path
 
+S = 32
+T_in = 61
+T = 0
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
