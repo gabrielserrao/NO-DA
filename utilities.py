@@ -79,13 +79,9 @@ class XarrayDataset(Dataset):
 #
 #################################################
 class ReadXarrayDataset():
-    def __init__(self, folder, input_vars, output_vars, device='cpu', num_files=None, is_train = True):
-        self.folder = folder
-        if is_train:
-            self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)
-        else:
-            self.file_list = os.listdir(folder)[num_files:] if num_files else os.listdir(folder)
-            
+    def __init__(self, folder, input_vars, output_vars, device='cpu', num_files=None, traintest_split= 0.8):
+        self.folder = folder        
+        self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
         self.input_vars = input_vars
         self.input_vars.append('x_encoding')
         self.input_vars.append('y_encoding')
@@ -145,6 +141,13 @@ class ReadXarrayDataset():
 
         self.input_data = input_data
         self.output_data = output_data
+
+        # Split data into training and testing sets
+        self.train_size = int(traintest_split * len(self.file_list))
+        self.test_size = len(self.file_list) - self.train_size
+        
+        self.train_data_input, self.test_data_input = torch.split(self.input_data, [self.train_size, self.test_size], dim=0)
+        self.train_data_output, self.test_data_output = torch.split(self.output_data, [self.train_size, self.test_size], dim=0)
 
 #################################################
 #
