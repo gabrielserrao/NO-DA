@@ -82,7 +82,7 @@ class ReadXarrayDataset():
     def __init__(self, folder, input_vars, output_vars, device='cpu', num_files=None, traintest_split= 0.8):
         self.folder = folder        
         self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
-        self.input_vars = input_vars
+        self.input_vars = input_vars.copy()
         self.input_vars.append('x_encoding')
         self.input_vars.append('y_encoding')
         self.input_vars.append('time_encoding')
