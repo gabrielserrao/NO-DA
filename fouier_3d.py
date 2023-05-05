@@ -1,8 +1,7 @@
 #%%
 """
 Adapted from Zongyi Li TODO: include referene in the README
-This file is the Fourier Neural Operator for 3D problem such as the Navier-Stokes equation discussed in Section 5.3 in the [paper](https://arxiv.org/pdf/2010.08895.pdf),
-which takes the 2D spatial + 1D temporal equation directly as a 3D problem
+This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1D temporal equation directly as a 3D problem
 """
 
 import torch.nn.functional as F
@@ -84,9 +83,9 @@ class FNO3d(nn.Module):
             W defined by self.w; K defined by self.conv .
         3. Project from the channel space to the output space by self.fc1 and self.fc2 .
         
-        input: the solution of the first 61 timesteps + 3 locations (u(1, x, y), ..., u(10, x, y),  x, y, t). It's a constant function in time, except for the last index.
+        input: all parameters  + encoded spatial-temporal locations (x, y, t)
         input shape: (batchsize, x=32, y=32, t=61, c=6)
-        output: the solution of the next 40 timesteps
+        output: the solution of the 61 timesteps
         output shape: (batchsize, x=32, y=32, t=61, c=1)
         """
 
@@ -94,9 +93,9 @@ class FNO3d(nn.Module):
         self.modes2 = modes2
         self.modes3 = modes3
         self.width = width
-        self.padding = 6 # pad the domain if input is non-periodic
+        self.padding = 1 # pad the domain if input is non-periodic
 
-        self.p = nn.Linear(6, self.width)# input channel is 6: the solution of the first 10 timesteps + 3 locations (u(1, x, y), ..., u(61, x, y),  x, y, t)
+        self.p = nn.Linear(6, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -113,7 +112,10 @@ class FNO3d(nn.Module):
 
     def forward(self, x):
         grid = self.get_grid(x.shape, x.device)
-        x = torch.cat((x, grid), dim=-1)
+        print(f'grid shape: {grid.shape}')
+        print(f'x shape: {x.shape}')
+        #x = torch.cat((x, grid), dim=-1)
+        print(f'x shape after cat: {x.shape}')
         x = self.p(x)
         x = x.permute(0, 4, 1, 2, 3)
         x = F.pad(x, [0,self.padding]) # pad the domain if input is non-periodic
@@ -162,25 +164,25 @@ class FNO3d(nn.Module):
 ################################################################
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32"
 input_vars = ['Por', 'Perm', 'Pressure'] # Porosity, Permeability, Pressure + x, y, time encodings 
-output_vars = ['Pressure']
+output_vars = ['CO_2']
 
 
 
 num_files=100
 traintest_split = 0.8
 
-batch_size = 10
+batch_size = 61
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 500
+epochs = 2 # 500
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 8
-width = 20
+modes = 12
+width = 128
 
 path = 'ns_fourier_3d_N'+str(ntrain)+'_ep' + str(epochs) + '_m' + str(modes) + '_w' + str(width)
 path_model = 'model/'+path
@@ -189,8 +191,8 @@ path_test_err = 'results/'+path+'test.txt'
 path_image = 'image/'+path
 
 S = 32
-T_in = 61
-T = 0
+#T_in = 61
+T = 61
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -236,27 +238,27 @@ print('preprocessing finished, time used:', t2-t1)
 
 train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(train_a, train_u), batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=batch_size, shuffle=False)
-
+#%%
 ################################################################
 # training and evaluation
 ################################################################
-model = FNO3d(modes, modes, modes, width).cuda()
+model = FNO3d(modes, modes, modes, width) #TODO include .cuda()
 print(count_params(model))
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
 
 myloss = LpLoss(size_average=False)
-y_normalizer.cuda()
+y_normalizer #TODO include .cuda()
 for ep in range(epochs):
     model.train()
     t1 = default_timer()
     train_mse = 0
     train_l2 = 0
     for x, y in train_loader:
-        x, y = x.cuda(), y.cuda()
+       # x, y = x.cuda(), y.cuda() 
 
         optimizer.zero_grad()
-        out = model(x).view(batch_size, S, S, T)
+        out = model(x) #.view(batch_size, S, S, T)
 
         mse = F.mse_loss(out, y, reduction='mean')
         # mse.backward()
@@ -275,9 +277,9 @@ for ep in range(epochs):
     test_l2 = 0.0
     with torch.no_grad():
         for x, y in test_loader:
-            x, y = x.cuda(), y.cuda()
+            #x, y = x.cuda(), y.cuda()
 
-            out = model(x).view(batch_size, S, S, T)
+            out = model(x) #.view(batch_size, S, S, T)
             out = y_normalizer.decode(out)
             test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()
 
@@ -295,7 +297,7 @@ test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a,
 with torch.no_grad():
     for x, y in test_loader:
         test_l2 = 0
-        x, y = x.cuda(), y.cuda()
+       # x, y = x.cuda(), y.cuda()
 
         out = model(x)
         out = y_normalizer.decode(out)
@@ -305,4 +307,5 @@ with torch.no_grad():
         print(index, test_l2)
         index = index + 1
 
-scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy()})
+#scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy()})
+# %%
