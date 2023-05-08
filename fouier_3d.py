@@ -163,7 +163,7 @@ class FNO3d(nn.Module):
 # configs
 ################################################################
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32"
-input_vars = ['Por', 'Perm', 'Pressure'] # Porosity, Permeability, Pressure + x, y, time encodings 
+input_vars = ['Por', 'Perm'] # Porosity, Permeability, Pressure + x, y, time encodings 
 output_vars = ['CO_2']
 
 
