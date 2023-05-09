@@ -95,7 +95,7 @@ class FNO3d(nn.Module):
         self.width = width
         self.padding = 1 # pad the domain if input is non-periodic
 
-        self.p = nn.Linear(6, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
+        self.p = nn.Linear(5, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -162,13 +162,13 @@ class FNO3d(nn.Module):
 ################################################################
 # configs
 ################################################################
-folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32"
+folder = "results32/"
 input_vars = ['Por', 'Perm'] # Porosity, Permeability, Pressure + x, y, time encodings 
 output_vars = ['CO_2']
 
 
 
-num_files=100
+num_files=1000 #1000
 traintest_split = 0.8
 
 batch_size = 61
@@ -177,7 +177,7 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 2 # 500
+epochs = 100 # 500
 
 
 iterations = epochs*(ntrain//batch_size)
@@ -194,7 +194,8 @@ S = 32
 #T_in = 61
 T = 61
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 
 ################################################################
 # load data
@@ -242,7 +243,7 @@ test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a,
 ################################################################
 # training and evaluation
 ################################################################
-model = FNO3d(modes, modes, modes, width) #TODO include .cuda()
+model = FNO3d(modes, modes, modes, width).to(device) #TODO include .cuda()
 print(count_params(model))
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
@@ -255,7 +256,8 @@ for ep in range(epochs):
     train_mse = 0
     train_l2 = 0
     for x, y in train_loader:
-       # x, y = x.cuda(), y.cuda() 
+        x.to(device) 
+        y.to(device) 
 
         optimizer.zero_grad()
         out = model(x) #.view(batch_size, S, S, T)
@@ -289,7 +291,7 @@ for ep in range(epochs):
 
     t2 = default_timer()
     print(ep, t2-t1, train_mse, train_l2, test_l2)
-# torch.save(model, path_model)
+torch.save(model, path_model)
 
 pred = torch.zeros(test_u.shape)
 index = 0
@@ -297,7 +299,8 @@ test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a,
 with torch.no_grad():
     for x, y in test_loader:
         test_l2 = 0
-       # x, y = x.cuda(), y.cuda()
+        x.to(device) 
+        y.to(device) 
 
         out = model(x)
         out = y_normalizer.decode(out)
@@ -307,5 +310,5 @@ with torch.no_grad():
         print(index, test_l2)
         index = index + 1
 
-#scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy()})
+scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy()})
 # %%
