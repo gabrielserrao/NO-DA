@@ -95,7 +95,7 @@ class FNO3d(nn.Module):
         self.width = width
         self.padding = 1 # pad the domain if input is non-periodic
 
-        self.p = nn.Linear(5, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
+        self.p = nn.Linear(6, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -163,7 +163,7 @@ class FNO3d(nn.Module):
 # configs
 ################################################################
 folder = "results32/"
-input_vars = ['Por', 'Perm'] # Porosity, Permeability, Pressure + x, y, time encodings 
+input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['CO_2']
 
 
