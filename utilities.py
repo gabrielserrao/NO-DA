@@ -117,13 +117,18 @@ class ReadXarrayDataset():
             data = data.assign(y_encoding=xr.DataArray(y_mesh, coords=[("X", X), ("Y", Y)]))
             data = data.assign(time_encoding=xr.DataArray(TIME_MESH[0], coords=[("time", TIME), ("X", X), ("Y", Y)]))
 
-            # Append input variables to list
+          # Append input variables to list
             input_data = []
             for var in self.input_vars:
-                if 'time' in data[var].dims:
+                if 'time' in data[var].dims and 'X' in data[var].dims and 'Y' in data[var].dims:
                     input_data.append(torch.tensor(data[var].values, dtype=torch.float32))
-                else:
-                    scalar_matrix = torch.tensor(data[var].values, dtype=torch.float32).expand(data.time.size, -1, -1)
+                elif 'X' in data[var].dims and 'Y' in data[var].dims:
+                    scalar_matrix = torch.tensor(data[var].values, dtype=torch.float32) 
+                    scalar_matrix = scalar_matrix.unsqueeze(0).expand(data.time.size, -1, -1)
+                    input_data.append(scalar_matrix)
+                elif 'time' in data[var].dims:
+                    scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) #using [0] as I am geting info from the first well 
+                    scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
                     input_data.append(scalar_matrix)
 
             # Append output variables to list
