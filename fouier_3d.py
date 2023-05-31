@@ -7,10 +7,12 @@ This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1
 import torch.nn.functional as F
 from utilities import *
 from timeit import default_timer
+import matplotlib.pyplot as plt
+import numpy as np
 
 torch.manual_seed(0)
 np.random.seed(0)
-
+#%%
 ################################################################
 # 3d fourier layers
 ################################################################
@@ -93,9 +95,10 @@ class FNO3d(nn.Module):
         self.modes2 = modes2
         self.modes3 = modes3
         self.width = width
-        self.padding = 1 # pad the domain if input is non-periodic
+        self.padding = 4 # pad the domain if input is non-periodic -. defautl 4 
+        #TODO: padding = 4 
 
-        self.p = nn.Linear(6, self.width)# input channel is 6: Por, Perm, Pressure + x, y, time encodings
+        self.p = nn.Linear(7, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -110,19 +113,23 @@ class FNO3d(nn.Module):
         self.w3 = nn.Conv3d(self.width, self.width, 1)
         self.q = MLP(self.width, 1, self.width * 4) # output channel is 1: u(x, y)
 
-    def forward(self, x):
+    def forward(self, x): # (batchsize, x=32, y=32, t=61, c=6)
         grid = self.get_grid(x.shape, x.device)
-        print(f'grid shape: {grid.shape}')
-        print(f'x shape: {x.shape}')
+        #print(f'grid shape: {grid.shape}')
+        #print(f'x shape: {x.shape}')
         #x = torch.cat((x, grid), dim=-1)
-        print(f'x shape after cat: {x.shape}')
-        x = self.p(x)
+        #print(f'x shape after cat: {x.shape}')
+        x = self.p(x) # output size: batchsize, channel , width
         x = x.permute(0, 4, 1, 2, 3)
-        x = F.pad(x, [0,self.padding]) # pad the domain if input is non-periodic
 
-        x1 = self.conv0(x)
-        x1 = self.mlp0(x1)
-        x2 = self.w0(x)
+        # TODO: modificar o padding para que ajustar x, y e t  
+        #p3d -> x, y, t
+        p3d = (self.padding, self.padding, self.padding, self.padding, self.padding, self.padding)
+        x = F.pad(x, p3d) # pad the domain if input is non-periodic
+        #x = F.pad(x, [0,self.padding]) # ORIGINAL
+        x1 = self.conv0(x) #Fourier layer
+        x1 = self.mlp0(x1) #Conv layer (input fourier layer output)
+        x2 = self.w0(x) #Conv layer (input x)
         x = x1 + x2
         x = F.gelu(x)
 
@@ -143,7 +150,10 @@ class FNO3d(nn.Module):
         x2 = self.w3(x)
         x = x1 + x2
 
-        x = x[..., :-self.padding]
+        #x = x[..., :-self.padding] ORIGINAL
+        #retirar o p3d referente aos ultimos 3 indices
+        x = x[..., -self.padding:-self.padding, -self.padding:-self.padding, -self.padding:-self.padding] 
+        
         x = self.q(x)
         x = x.permute(0, 2, 3, 4, 1) # pad the domain if input is non-periodic
         return x
@@ -162,13 +172,13 @@ class FNO3d(nn.Module):
 ################################################################
 # configs
 ################################################################
-folder = "results32/"
-input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2']
+folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
+input_vars = ['Por', 'Perm', 'gas_rate', 'Pressure'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
+output_vars = ['CO_2'] 
 
 
 
-num_files=1000 #1000
+num_files= 1000
 traintest_split = 0.8
 
 batch_size = 61
@@ -177,18 +187,34 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 100 # 500
+epochs = 500 
 
 
 iterations = epochs*(ntrain//batch_size)
 modes = 12
-width = 128
+width = 128 
 
-path = 'ns_fourier_3d_N'+str(ntrain)+'_ep' + str(epochs) + '_m' + str(modes) + '_w' + str(width)
-path_model = 'model/'+path
-path_train_err = 'results/'+path+'train.txt'
-path_test_err = 'results/'+path+'test.txt'
-path_image = 'image/'+path
+# Prepare the path
+path = 'ns_fourier_3d_N{}_ep{}_m{}_w{}'.format(ntrain, epochs, modes, width)
+
+# Include in the path the input and output variables
+path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
+
+# Create paths for log, model, and images
+path_log = os.path.join('runs', path, 'log')
+path_model = os.path.join('runs', path, 'model')
+path_image = os.path.join('runs', path, 'images')
+
+# Create directories
+os.makedirs(path_log, exist_ok=True)
+os.makedirs(path_model, exist_ok=True)
+os.makedirs(path_image, exist_ok=True)
+
+# Create paths for train error and test error files
+path_train_err = os.path.join(path_log, 'train.txt')
+path_test_err = os.path.join(path_log, 'test.txt')
+
+
 
 S = 32
 #T_in = 61
@@ -251,6 +277,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteratio
 myloss = LpLoss(size_average=False)
 y_normalizer #TODO include .cuda()
 for ep in range(epochs):
+    print(f'epoch {ep} of {epochs}')
     model.train()
     t1 = default_timer()
     train_mse = 0
@@ -277,22 +304,56 @@ for ep in range(epochs):
 
     model.eval()
     test_l2 = 0.0
+    test_mse= 0.0
     with torch.no_grad():
-        for x, y in test_loader:
-            #x, y = x.cuda(), y.cuda()
+        for index, (x, y) in enumerate(test_loader):
+            x.to(device)
+            y.to(device)
 
             out = model(x) #.view(batch_size, S, S, T)
+            mse = F.mse_loss(out, y, reduction='mean')
+
+            y = y_normalizer.decode(y)
             out = y_normalizer.decode(out)
-            test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()
+
+            test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()            
+            test_mse += mse.item()
+
+            if index == 0:
+                test_y_shape = (1, 61, 32, 32, 1)
+                predicted_y_shape = (1, 61, 32, 32, 1)
+                test_y = y[0].view(test_y_shape).cpu().numpy()
+                predicted_y = out[0].view(predicted_y_shape).cpu().numpy()
+                fig, ax = plt.subplots(nrows=1, ncols=3)
+                ax[0].imshow(test_y[0, -1, :, :, 0].T)
+                ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
+                ax[2].imshow((test_y[0, 0, :, :, 0]-predicted_y[0, 0, :, :, 0]).T)
+                plt.savefig(path_image + '_ep' + str(ep) + '.png')
+                plt.close()
+       
+
+    
 
     train_mse /= len(train_loader)
     train_l2 /= ntrain
+    test_mse/= len(test_loader)
     test_l2 /= ntest
 
     t2 = default_timer()
-    print(ep, t2-t1, train_mse, train_l2, test_l2)
-torch.save(model, path_model)
+    #print mse, l2 for train and test data for each epoch
+    print(f'ep {ep}: t={t2-t1:.3f}, train_mse={train_mse:.3e}, train_l2={train_l2:.3e}, test_l2={test_l2:.3e}, test_mse={test_mse:.3e}')
+    #save train and test mse, l2 for each epoch
+    with open(path_train_err, 'a') as f:
+        f.write(f'epoch {ep}: t={t2-t1:.3f}, train_mse={train_mse:.3e}, train_l2={train_l2:.3e}\n')
+    with open(path_test_err, 'a') as f:
+        f.write(f'epoch {ep}: t={t2-t1:.3f}, test_mse={test_mse:.3e}, test_l2={test_l2:.3e}\n') 
 
+    #for each 10 epochs, save the model
+    if ep % 10 == 0:
+        torch.save(model, path_model)
+    
+torch.save(model, path_model)
+#%%
 pred = torch.zeros(test_u.shape)
 index = 0
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
@@ -304,11 +365,15 @@ with torch.no_grad():
 
         out = model(x)
         out = y_normalizer.decode(out)
+        y = y_normalizer.decode(y)
         pred[index] = out
 
         test_l2 += myloss(out.view(1, -1), y.view(1, -1)).item()
         print(index, test_l2)
         index = index + 1
 
-scipy.io.savemat('pred/'+path+'.mat', mdict={'pred': pred.cpu().numpy()})
-# %%
+scipy.io.savemat(os.path.join('runs', path, 'log', path+'.mat'), mdict={'pred': pred.cpu().numpy()})
+
+
+###
+
