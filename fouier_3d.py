@@ -170,7 +170,7 @@ class FNO3d(nn.Module):
         return torch.cat((gridx, gridy, gridz), dim=-1).to(device)
 
 ################################################################
-# configs
+# configs-1
 ################################################################
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
 input_vars = ['Por', 'Perm', 'gas_rate', 'Pressure'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
