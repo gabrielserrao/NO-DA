@@ -1,1 +1,11 @@
-datasets/
+dataset/
+model/
+results/
+runs/
+#Ignore all images#
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+
