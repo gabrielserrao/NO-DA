@@ -254,13 +254,10 @@ class PointGaussianNormalizer(object):
     def decode(self, x):
         return x * (self.std + self.eps) + self.mean
 
-    def cuda(self):
-        self.mean = self.mean.cuda()
-        self.std = self.std.cuda()
-
-    def cpu(self):
-        self.mean = self.mean.cpu()
-        self.std = self.std.cpu()
+    def cuda(self, device):
+        self.mean = self.mean.to(device)
+        self.std = self.std.to(device)
+        return self 
 
 
 

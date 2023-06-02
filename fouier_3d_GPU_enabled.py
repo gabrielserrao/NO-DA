@@ -223,8 +223,10 @@ S = 32
 #T_in = 61
 T = 61
 
-#device = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = 'cpu'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+#device = 'cpu'
+print('Using ' + device + ' for training')
 
 ################################################################
 # load data
@@ -263,6 +265,14 @@ train_output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
 # Create normalizers for test data
 test_input_normalizer = PointGaussianNormalizer(test_loader, is_label=False)
 test_output_normalizer = PointGaussianNormalizer(test_loader, is_label=True)
+
+train_input_normalizer = train_input_normalizer.cuda(device)
+train_output_normalizer = train_output_normalizer.cuda(device)
+
+test_input_normalizer = test_input_normalizer.cuda(device)
+test_output_normalizer = test_output_normalizer.cuda(device)
+
+
 print('preprocessing finished, time used:', t2-t1)
 
 
@@ -284,11 +294,11 @@ for ep in range(epochs):
     train_l2 = 0
     for x, y in train_loader:
         
-        x = train_input_normalizer.encode(x)
-        y = train_output_normalizer.encode(y)
+        x = x.to(device)
+        y = y.to(device)
         
-        x.to(device) 
-        y.to(device) 
+        x = train_input_normalizer.encode(x)
+        y = train_output_normalizer.encode(y) 
 
         optimizer.zero_grad()
         out = model(x) #.view(batch_size, S, S, T)
@@ -311,11 +321,13 @@ for ep in range(epochs):
     test_mse= 0.0
     with torch.no_grad():
         for index, (x, y) in enumerate(test_loader):
+            
+            x = x.to(device)
+            y = y.to(device)
+
             x = test_input_normalizer.encode(x)
             y = test_output_normalizer.encode(y)
             
-            x.to(device)
-            y.to(device)
 
             out = model(x) #.view(batch_size, S, S, T)
             mse = F.mse_loss(out, y, reduction='mean')
