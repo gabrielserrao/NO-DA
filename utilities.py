@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader, IterableDataset
+from torch.utils.data import Dataset, DataLoader, IterableDataset, TensorDataset
 import os
 import xarray as xr
 
@@ -20,66 +20,173 @@ from functools import partial
 #################################################
 
 # Define the XarrayDataset class which inherits from Dataset class
-class XarrayDataset(Dataset):
-    # Initialize the class with folder, input_vars, and output_vars as input arguments
-    def __init__(self, folder, input_vars, output_vars):
-        self.folder = folder  # Set the folder containing the data files
-        self.file_list = os.listdir(folder)  # List all the files in the folder
-        self.input_vars = input_vars  # Set the input variables for the dataset
-        self.input_vars.append('x_encoding')  # Add x_encoding to the input variables
-        self.input_vars.append('y_encoding')  # Add y_encoding to the input variables
-        self.input_vars.append('time_encoding')  # Add time_encoding to the input variables
-        self.output_vars = output_vars  # Set the output variables for the dataset
+class ReadXarrayDatasetNorm(Dataset):
+    def __init__(self, folder, input_vars, output_vars, num_files=None):
+        self.folder = folder        
+        self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
+        self.input_vars = input_vars.copy()
+        self.input_vars.append('x_encoding')
+        self.input_vars.append('y_encoding')
+        self.input_vars.append('time_encoding')
+        self.output_vars = output_vars.copy()
+        
+        self.input_normalizers = []
+        self.output_normalizers = []
+        self.file_stats = {}
 
-    # Define the length method to return the number of files in the folder
+
+
     def __len__(self):
         return len(self.file_list)
 
-    # Define the getitem method to return the input and output data for a specific index
     def __getitem__(self, idx):
-        file_path = os.path.join(self.folder, self.file_list[idx])  # Get the file path for the given index
-        data = xr.open_dataset(file_path)  # Open the file as an xarray dataset
+        file_path = os.path.join(self.folder, self.file_list[idx])
+        data = xr.open_dataset(file_path)
 
-        # Extract the X, Y, and time values from the dataset
         X = data['X'].values
         Y = data['Y'].values
         TIME = data['time'].values
 
-        # Create meshgrids for X, Y, and time dimensions
         x_mesh, y_mesh = np.meshgrid(data.X, data.Y, indexing='ij')
         TIME_MESH = np.meshgrid(data.time, data.X, data.Y, indexing='ij')
-
-        # Add the meshgrids as new data variables in the xarray dataset
         data = data.assign(x_encoding=xr.DataArray(x_mesh, coords=[("X", X), ("Y", Y)]))
         data = data.assign(y_encoding=xr.DataArray(y_mesh, coords=[("X", X), ("Y", Y)]))
         data = data.assign(time_encoding=xr.DataArray(TIME_MESH[0], coords=[("time", TIME), ("X", X), ("Y", Y)]))
-
-        # Initialize an empty list to store the input data tensors
-        input_data_list = []
-        for var in self.input_vars:
-            # Check if the variable has a time dimension
-            if 'time' in data[var].dims:
-                input_data_list.append(torch.tensor(data[var].values, dtype=torch.float32).unsqueeze(0))
-            else:
-                scalar_matrix = torch.tensor(data[var].values, dtype=torch.float32).expand(data.time.size, -1, -1)
-                input_data_list.append(scalar_matrix.unsqueeze(0))
-
-        # Concatenate the input data tensors along a new dimension
-        input_data = torch.cat(input_data_list, dim=0)
-        # Reorder dimensions to (time, shape[0], shape[1], channels)
-        input_data = input_data.permute(1, 2, 3, 0)
-
-        # Initialize an empty list to store the output data tensors
-        output_data_list = [torch.tensor(data[var].values, dtype=torch.float32).unsqueeze(0) for var in self.output_vars]
         
-        # Concatenate the output data tensors along a new dimension
-        output_data = torch.cat(output_data_list, dim=0)
-        # Reorder dimensions to (time, shape[0], shape[1], channels)
-        output_data = output_data.permute(1, 2, 3, 0)  
-        #final dimensions are (Batchsize, time, x, y, channels) 
-        # Number of chanbels will be input variables + x_encoding, y_encoding, time_encoding (input + 3)
+        input_data = []
+        for var in self.input_vars:
+            if 'time' in data[var].dims and 'X' in data[var].dims and 'Y' in data[var].dims:
+                input_data.append(torch.tensor(data[var].values, dtype=torch.float32))
+            elif 'X' in data[var].dims and 'Y' in data[var].dims:
+                scalar_matrix = torch.tensor(data[var].values, dtype=torch.float32) 
+                scalar_matrix = scalar_matrix.unsqueeze(0).expand(data.time.size, -1, -1)
+                input_data.append(scalar_matrix)
+            elif 'time' in data[var].dims:
+                scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) 
+                scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
+                input_data.append(scalar_matrix)
+                
+        #print(len(input_data))
 
-        return input_data, output_data
+        output_data = []
+        for var in self.output_vars:
+           output_data.append(torch.tensor(data[var].values, dtype=torch.float32))
+
+        #print(output_data)
+
+
+        input_data = torch.stack(input_data, dim=-1)
+        output_data = torch.stack(output_data, dim=-1)
+        
+
+        
+        # Compute mean and std if they have not been computed yet
+        if file_path not in self.file_stats:
+            input_mean = torch.mean(input_data, dim=(0, 1, 2))
+            input_std = torch.std(input_data, dim=(0, 1, 2))
+            output_mean = torch.mean(output_data, dim=(0, 1, 2))
+            output_std = torch.std(output_data, dim=(0, 1, 2))
+            self.file_stats[file_path] = {'input_mean': input_mean, 'input_std': input_std, 
+                                        'output_mean': output_mean, 'output_std': output_std}
+        else:
+            input_mean = self.file_stats[file_path]['input_mean']
+            input_std = self.file_stats[file_path]['input_std']
+            output_mean = self.file_stats[file_path]['output_mean']
+            output_std = self.file_stats[file_path]['output_std']
+
+        normalized_input = (input_data - input_mean) / (input_std + 1e-7)
+        normalized_output = (output_data - output_mean) / (output_std + 1e-7)
+        
+        return_tuple = (input_data, output_data, normalized_input, normalized_output, 
+                        np.array((input_mean, input_std)), np.array((output_mean, output_std)))
+    
+        return return_tuple
+
+class ReadXarrayDatasetNoNorm(Dataset):
+    def __init__(self, folder, input_vars, output_vars, num_files=None):
+        self.folder = folder        
+        self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
+        self.input_vars = input_vars.copy()
+        self.input_vars.append('x_encoding')
+        self.input_vars.append('y_encoding')
+        self.input_vars.append('time_encoding')
+        self.output_vars = output_vars.copy()
+
+        # self.input_normalizers = []
+        # self.output_normalizers = []
+        # self.file_stats = {}
+
+
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        file_path = os.path.join(self.folder, self.file_list[idx])
+        data = xr.open_dataset(file_path)
+
+        X = data['X'].values
+        Y = data['Y'].values
+        TIME = data['time'].values
+
+        x_mesh, y_mesh = np.meshgrid(data.X, data.Y, indexing='ij')
+        TIME_MESH = np.meshgrid(data.time, data.X, data.Y, indexing='ij')
+        data = data.assign(x_encoding=xr.DataArray(x_mesh, coords=[("X", X), ("Y", Y)]))
+        data = data.assign(y_encoding=xr.DataArray(y_mesh, coords=[("X", X), ("Y", Y)]))
+        data = data.assign(time_encoding=xr.DataArray(TIME_MESH[0], coords=[("time", TIME), ("X", X), ("Y", Y)]))
+        
+        input_data = []
+        for var in self.input_vars:
+            if 'time' in data[var].dims and 'X' in data[var].dims and 'Y' in data[var].dims:
+                input_data.append(torch.tensor(data[var].values, dtype=torch.float32))
+            elif 'X' in data[var].dims and 'Y' in data[var].dims:
+                scalar_matrix = torch.tensor(data[var].values, dtype=torch.float32) 
+                scalar_matrix = scalar_matrix.unsqueeze(0).expand(data.time.size, -1, -1)
+                input_data.append(scalar_matrix)
+            elif 'time' in data[var].dims:
+                scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) 
+                scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
+                input_data.append(scalar_matrix)
+                
+        #print(len(input_data))
+
+        output_data = []
+        for var in self.output_vars:
+           output_data.append(torch.tensor(data[var].values, dtype=torch.float32))
+
+        #print(output_data)
+
+
+        input_data = torch.stack(input_data, dim=-1)
+        output_data = torch.stack(output_data, dim=-1)
+        
+
+        
+        # # Compute mean and std if they have not been computed yet
+        # if file_path not in self.file_stats:
+        #     input_mean = torch.mean(input_data, dim=(0, 1, 2))
+        #     input_std = torch.std(input_data, dim=(0, 1, 2))
+        #     output_mean = torch.mean(output_data, dim=(0, 1, 2))
+        #     output_std = torch.std(output_data, dim=(0, 1, 2))
+        #     self.file_stats[file_path] = {'input_mean': input_mean, 'input_std': input_std, 
+        #                                 'output_mean': output_mean, 'output_std': output_std}
+        # else:
+        #     input_mean = self.file_stats[file_path]['input_mean']
+        #     input_std = self.file_stats[file_path]['input_std']
+        #     output_mean = self.file_stats[file_path]['output_mean']
+        #     output_std = self.file_stats[file_path]['output_std']
+
+        # normalized_input = (input_data - input_mean) / (input_std + 1e-7)
+        # normalized_output = (output_data - output_mean) / (output_std + 1e-7)
+        
+        # return_tuple = (input_data, output_data, normalized_input, normalized_output, 
+        #                 np.array((input_mean, input_std)), np.array((output_mean, output_std)))
+    
+        return input_data, output_data  
+
+
+
+
     
 #################################################
 #
@@ -168,7 +275,7 @@ class ReadXarrayDataset():
 #
 #################################################
 # 
-class UnitGaussianNormalizer(object):
+class GaussianNormalizer(object):
     def __init__(self, x, eps=0.00001, time_last=True):
         super(UnitGaussianNormalizer, self).__init__()
 
@@ -186,6 +293,73 @@ class UnitGaussianNormalizer(object):
         mean = self.mean
         x = (x * std) + mean
         return x
+    
+class UnitGaussianNormalizer(object):
+    def __init__(self, x, mean=None, std=None, eps=0.00001):
+        super(UnitGaussianNormalizer, self).__init__()
+        
+        # If mean and std are provided, use them. Otherwise, compute from data.
+        if mean is None or std is None:
+            self.mean = torch.mean(x, dim=(0, 1, 2))
+            self.std = torch.std(x, dim=(0, 1, 2))
+        else:
+            self.mean = mean
+            self.std = std
+        self.eps = eps
+
+    def encode(self, x):
+        x = (x - self.mean) / (self.std + self.eps)
+        return x
+
+    def decode(self, x):
+        std = self.std + self.eps # n
+        mean = self.mean
+        x = (x * std) + mean
+        return x
+    
+    def decode_with_values(self, x, mean, std):
+        x = (x * std) + mean
+        return x
+    
+# normalization, pointwise gaussian
+class PointGaussianNormalizer(object):
+    def __init__(self, dataloader, is_label=False, eps=0.00001):
+        super(PointGaussianNormalizer, self).__init__()
+        self.eps = eps
+        self.mean, self.std = self.batch_mean_and_sd(dataloader, is_label)
+
+    def batch_mean_and_sd(self, loader, is_label):
+        cnt = 0
+        fst_moment = torch.empty(loader.dataset.tensors[0].shape[-1])
+        snd_moment = torch.empty(loader.dataset.tensors[0].shape[-1])
+
+        for data, labels in loader:
+            data = labels if is_label else data  # if this is label normalizer, normalize labels
+            b, t, h, w, c = data.shape
+            nb_pixels = b * t * h * w
+            sum_ = torch.sum(data, dim=[0, 1, 2, 3])
+            sum_of_square = torch.sum(data ** 2, dim=[0, 1, 2, 3])
+            fst_moment = (cnt * fst_moment + sum_) / (cnt + nb_pixels)
+            snd_moment = (cnt * snd_moment + sum_of_square) / (cnt + nb_pixels)
+            cnt += nb_pixels
+
+        return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
+
+    def encode(self, x):
+        return (x - self.mean) / (self.std + self.eps)
+
+    def decode(self, x):
+        return x * (self.std + self.eps) + self.mean
+
+    def cuda(self):
+        self.mean = self.mean.cuda()
+        self.std = self.std.cuda()
+
+    def cpu(self):
+        self.mean = self.mean.cpu()
+        self.std = self.std.cpu()
+
+
 
 #################################################
 #
