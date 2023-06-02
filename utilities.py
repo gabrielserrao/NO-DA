@@ -88,7 +88,7 @@ class ReadXarrayDataset(Dataset):
 # Load Data Class
 #
 #################################################
-class ReadXarrayDataset():
+class ReadXarray():
     def __init__(self, folder, input_vars, output_vars, device='cpu', num_files=None, traintest_split= 0.8):
         self.folder = folder        
         self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
