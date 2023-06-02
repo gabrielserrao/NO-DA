@@ -98,7 +98,7 @@ class FNO3d(nn.Module):
         self.padding = 4 # pad the domain if input is non-periodic -. defautl 4 
         #TODO: padding = 4 
 
-        self.p = nn.Linear(7, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
+        self.p = nn.Linear(6, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -173,7 +173,7 @@ class FNO3d(nn.Module):
 # configs-1
 ################################################################
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
-input_vars = ['Por', 'Perm', 'gas_rate', 'Pressure'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
+input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['CO_2'] 
 
 
@@ -230,7 +230,7 @@ device = 'cpu'
 runtime = np.zeros(2, )
 t1 = default_timer()
 # Create instance of ReadXarrayDataset class for training data
-dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, traintest_split = traintest_split)
+dataset = ReadXarray(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, traintest_split = traintest_split)
 
 
 # Get input and output data tensors
