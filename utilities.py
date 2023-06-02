@@ -225,18 +225,26 @@ class PointGaussianNormalizer(object):
 
     def batch_mean_and_sd(self, loader, is_label):
         cnt = 0
-        fst_moment = torch.empty(loader.dataset.tensors[0].shape[-1])
-        snd_moment = torch.empty(loader.dataset.tensors[0].shape[-1])
+        fst_moment = None
+        snd_moment = None
 
         for data, labels in loader:
             data = labels if is_label else data  # if this is label normalizer, normalize labels
+            data_shape = data.shape[-1]
+            if fst_moment is None:
+                fst_moment = torch.zeros(data_shape)
+                snd_moment = torch.zeros(data_shape)
+
             b, t, h, w, c = data.shape
             nb_pixels = b * t * h * w
             sum_ = torch.sum(data, dim=[0, 1, 2, 3])
             sum_of_square = torch.sum(data ** 2, dim=[0, 1, 2, 3])
-            fst_moment = (cnt * fst_moment + sum_) / (cnt + nb_pixels)
-            snd_moment = (cnt * snd_moment + sum_of_square) / (cnt + nb_pixels)
+            fst_moment += sum_
+            snd_moment += sum_of_square
             cnt += nb_pixels
+
+        fst_moment /= cnt
+        snd_moment /= cnt
 
         return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
 
