@@ -204,13 +204,13 @@ path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
 
 # Create paths for log, model, and images
 path_log = os.path.join('runs', path, 'log')
-path_model = os.path.join('runs', path, 'model')
-path_model = os.path.join(path_model, 'model.pt')
+# Modify here: 'model.pt' will be the filename, not a subdirectory
+path_model = os.path.join('runs', path, 'model.pt') 
 path_image = os.path.join('runs', path, 'images')
 
 # Create directories
 os.makedirs(path_log, exist_ok=True)
-os.makedirs(path_model, exist_ok=True)
+os.makedirs(os.path.dirname(path_model), exist_ok=True)  # Get the directory of the path_model
 os.makedirs(path_image, exist_ok=True)
 
 # Create paths for train error and test error files
