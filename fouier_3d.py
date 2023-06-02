@@ -152,7 +152,7 @@ class FNO3d(nn.Module):
 
         #x = x[..., :-self.padding] ORIGINAL
         #retirar o p3d referente aos ultimos 3 indices
-        x = x[..., -self.padding:-self.padding, -self.padding:-self.padding, -self.padding:-self.padding] 
+        x = x[..., self.padding:-self.padding, self.padding:-self.padding, self.padding:-self.padding] 
         
         x = self.q(x)
         x = x.permute(0, 2, 3, 4, 1) # pad the domain if input is non-periodic
