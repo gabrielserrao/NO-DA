@@ -98,7 +98,7 @@ class FNO3d(nn.Module):
         self.padding = 4 # pad the domain if input is non-periodic -. defautl 4 
         #TODO: padding = 4 
 
-        self.p = nn.Linear(7, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
+        self.p = nn.Linear(6, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -175,8 +175,8 @@ class FNO3d(nn.Module):
 #create a variable called resolution 
 resolution = 32
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results" + str(resolution) + "/"
-input_vars = ['Por', 'Perm', 'gas_rate', 'Pressure'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
+input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
+output_vars = ['Pressure'] 
 
 
 
@@ -341,8 +341,8 @@ for ep in range(epochs):
             if index == 0:
                 test_y_shape = (1, 61, resolution, resolution, 1)
                 predicted_y_shape = (1, 61, resolution, resolution, 1)
-                test_y = y[0].view(test_y_shape).cpu().numpy()
-                predicted_y = out[0].view(predicted_y_shape).cpu().numpy()
+                test_y = y[0].detach().view(test_y_shape).cpu().numpy()
+                predicted_y = out[0].detach().view(predicted_y_shape).cpu().numpy()
                 fig, ax = plt.subplots(nrows=1, ncols=3)
                 ax[0].imshow(test_y[0, -1, :, :, 0].T)
                 ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
