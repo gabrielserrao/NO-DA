@@ -205,6 +205,7 @@ path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
 # Create paths for log, model, and images
 path_log = os.path.join('runs', path, 'log')
 path_model = os.path.join('runs', path, 'model')
+path_model = os.path.join(path_model, 'model.pt')
 path_image = os.path.join('runs', path, 'images')
 
 # Create directories
