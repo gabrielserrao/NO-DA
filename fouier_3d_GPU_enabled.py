@@ -9,6 +9,10 @@ from utilities import *
 from timeit import default_timer
 import matplotlib.pyplot as plt
 import numpy as np
+import resource
+
+
+
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -98,7 +102,7 @@ class FNO3d(nn.Module):
         self.padding = 4 # pad the domain if input is non-periodic -. defautl 4 
         #TODO: padding = 4 
 
-        self.p = nn.Linear(7, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
+        self.p = nn.Linear(6, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
         self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
         self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
@@ -175,21 +179,22 @@ class FNO3d(nn.Module):
 #create a variable called resolution 
 resolution = 32
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results" + str(resolution) + "/"
-input_vars = ['Por', 'Perm', 'gas_rate', 'Pressure'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
+input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
+output_vars = ['Pressure'] 
 
 
 
-num_files= 1000
+
+num_files= 100
 traintest_split = 0.8
 
-batch_size = 61
+batch_size = 16
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 500 
+epochs = 80
 
 
 iterations = epochs*(ntrain//batch_size)
@@ -272,7 +277,7 @@ train_output_normalizer = train_output_normalizer.cuda(device)
 test_input_normalizer = test_input_normalizer.cuda(device)
 test_output_normalizer = test_output_normalizer.cuda(device)
 
-
+print(f"Memory usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}")
 print('preprocessing finished, time used:', t2-t1)
 
 
@@ -341,16 +346,18 @@ for ep in range(epochs):
             if index == 0:
                 test_y_shape = (1, 61, resolution, resolution, 1)
                 predicted_y_shape = (1, 61, resolution, resolution, 1)
-                test_y = y[0].view(test_y_shape).cpu().numpy()
-                predicted_y = out[0].view(predicted_y_shape).cpu().numpy()
+                test_y = y[0].detach().view(test_y_shape).cpu().numpy()
+                predicted_y = out[0].detach().view(predicted_y_shape).cpu().numpy()
                 fig, ax = plt.subplots(nrows=1, ncols=3)
                 ax[0].imshow(test_y[0, -1, :, :, 0].T)
                 ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
                 ax[2].imshow((test_y[0, 0, :, :, 0]-predicted_y[0, 0, :, :, 0]).T)
                 plt.savefig(path_image + '_ep' + str(ep) + '.png')
                 plt.close()
+                #detached_out = out.detach().cpu().numpy()
        
-
+#which is the correct command to submit sbatch?
+#sbatch -p gpu --gres=gpu:1 --mem=10000 --time=0-00:30:00 --wrap="python fouier_3d_GPU_enabled.py"
     
 
     train_mse /= len(train_loader)
@@ -373,9 +380,9 @@ for ep in range(epochs):
     
 torch.save(model, path_model)
 #%%
-# pred = torch.zeros(test_u.shape)
+#pred = torch.zeros(test_u.shape)
 # index = 0
-# test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
+# #test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
 # with torch.no_grad():
 #     for x, y in test_loader:
 #         test_l2 = 0
@@ -383,15 +390,16 @@ torch.save(model, path_model)
 #         y.to(device) 
 
 #         out = model(x)
-#         out = y_normalizer.decode(out)
-#         y = y_normalizer.decode(y)
-#         pred[index] = out
+#         out = test_output_normalizer.decode(out)
+#         y = test_output_normalizer.decode(y)
+#         #pred[index] = out
 
 #         test_l2 += myloss(out.view(1, -1), y.view(1, -1)).item()
 #         print(index, test_l2)
 #         index = index + 1
+#         #plot 
 
-# scipy.io.savemat(os.path.join('runs', path, 'log', path+'.mat'), mdict={'pred': pred.cpu().numpy()})
+#scipy.io.savemat(os.path.join('runs', path, 'log', path+'.mat'), mdict={'pred': pred.cpu().numpy()})
 
 
 ###
