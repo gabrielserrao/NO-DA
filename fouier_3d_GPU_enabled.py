@@ -180,12 +180,12 @@ class FNO3d(nn.Module):
 resolution = 32
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['Pressure'] 
+output_vars = ['CO_2'] 
 
 
 
 
-num_files= 100
+num_files= 1000
 traintest_split = 0.8
 
 batch_size = 16
@@ -194,12 +194,12 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 80
+epochs = 500
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 12
-width = 128 
+modes = 6 #12
+width = 64 #128 
 
 # Prepare the path
 path = 'ns_fourier_3d_N{}_ep{}_m{}_w{}'.format(ntrain, epochs, modes, width)
@@ -289,7 +289,7 @@ print('preprocessing finished, time used:', t2-t1)
 model = FNO3d(modes, modes, modes, width).to(device) 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
-
+print(f"Memory usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}")
 myloss = LpLoss(size_average=False)
 for ep in range(epochs):
     print(f'epoch {ep} of {epochs}')
@@ -307,6 +307,7 @@ for ep in range(epochs):
 
         optimizer.zero_grad()
         out = model(x) #.view(batch_size, S, S, T)
+        print(f"Memory usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}")
 
         mse = F.mse_loss(out, y, reduction='mean')
         # mse.backward()
@@ -351,7 +352,7 @@ for ep in range(epochs):
                 fig, ax = plt.subplots(nrows=1, ncols=3)
                 ax[0].imshow(test_y[0, -1, :, :, 0].T)
                 ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
-                ax[2].imshow((test_y[0, 0, :, :, 0]-predicted_y[0, 0, :, :, 0]).T)
+                ax[2].imshow((test_y[0, -1, :, :, 0]-predicted_y[0, -1, :, :, 0]).T)
                 plt.savefig(path_image + '_ep' + str(ep) + '.png')
                 plt.close()
                 #detached_out = out.detach().cpu().numpy()
