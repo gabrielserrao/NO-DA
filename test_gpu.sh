@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=FNO
 #SBATCH --partition=gpu
-#SBATCH --time=1:00:00
+#SBATCH --time=119:00:00
 #SBATCH --account=research-ceg-gse
 #SBATCH --mem=32G
 ##add log file
