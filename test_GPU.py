@@ -590,7 +590,7 @@ resolution = 32
 
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['Pressure'] 
+output_vars = ['CO_2'] 
 
 
 
