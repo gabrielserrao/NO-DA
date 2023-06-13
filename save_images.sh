@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --job-name=FNO
+#SBATCH --job-name=DA-FNO
 #SBATCH --partition=memory
-#SBATCH --time=1:00:00
+#SBATCH --time=12:00:00
 #SBATCH --account=research-ceg-gse
-#SBATCH --mem=500G
+#SBATCH --mem=200G
 ##add log file
 #SBATCH --output=slurm-%x-%j.out
 ##error file
@@ -17,4 +17,4 @@ module load 2022r2
 module load openmpi
 module load miniconda3
 
-python3 postprocess.py
+python3 DataAssimilation.py
