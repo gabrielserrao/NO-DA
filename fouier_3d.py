@@ -234,11 +234,11 @@ dataset = ReadXarray(folder=folder, input_vars=input_vars, output_vars=output_va
 
 
 # Get input and output data tensors
-train_a = dataset.train_data_input
-train_u = dataset.train_data_output
+train_a = dataset.train_data_input #800, 32, 32, 61, 6 
+train_u = dataset.train_data_output #800, 32, 32, 61, 1
 
-test_a = dataset.test_data_input
-test_u = dataset.test_data_output
+test_a = dataset.test_data_input #200, 32, 32, 61, 6
+test_u = dataset.test_data_output #200, 32, 32, 61, 1
 
 # Move data tensors to GPU if available
 train_a = train_a.to(device)
@@ -249,6 +249,8 @@ test_u = test_u.to(device)
 
 # Normalize input_data and output_data
 a_normalizer = UnitGaussianNormalizer(train_a)
+#TODO: save a torch tensor with the mean and std of the training data
+
 train_a= a_normalizer.encode(train_a)
 test_a = a_normalizer.encode(test_a)
 

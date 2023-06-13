@@ -189,7 +189,7 @@ class FNO3d(nn.Module):
 # define all hardcoded variables and paths here
 folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-variable = 'CO_2'
+variable = 'Pressure'
 output_vars = [variable] 
 device = 'cpu'
 num_files = 1000
@@ -198,8 +198,8 @@ path_runs = f'runs/OK_ns_fourier_3d_N800.0_ep100_m12_w128_b61_padding4_{variable
 model_name = f'ns_fourier_3d_N800.0_ep100_m12_w128_b61_padding4_{variable}'
 path_model = os.path.join(path_runs, 'model', f'{model_name}.pt')
 #path_model = '/scratch/smrserraoseabr/Projects/NO-DA/runs/OK_ns_fourier_3d_N800.0_ep100_m12_w128_b61_padding4_CO2/model/ns_fourier_3d_N800.0_ep100_m12_w128_b61_padding4_CO2.pt'
-num_samples = 200  # Number of samples to iterate over
-sample = 5
+num_samples = 1000  # Number of samples to iterate over
+
 if variable == 'CO_2':
     colorbar_vmax, colorbar_vmin = 0.0, 1.0 # Define your min and max here
 elif variable == 'Pressure':
@@ -228,10 +228,13 @@ test_a = test_a.to(device)
 test_u = test_u.to(device)
 
 a_normalizer = UnitGaussianNormalizer(train_a)
+y_normalizer = UnitGaussianNormalizer(train_u)
+
+
 train_a = a_normalizer.encode(train_a)
 test_a = a_normalizer.encode(test_a)
 
-y_normalizer = UnitGaussianNormalizer(train_u)
+
 train_u = y_normalizer.encode(train_u)
 test_u = y_normalizer.encode(test_u)
 
@@ -287,33 +290,33 @@ def plot_to_memory_image(true, predicted, time_step, variable):
     buf.seek(0)
     return buf
 
-gif_paths = []
+# gif_paths = []
 
-for sample in range(num_samples):
-    # Rest of the code to generate the GIF for each sample
-    image_buffers = []
-    test_y = true[sample,...].detach().numpy()
-    predicted_y = pred_un[sample,...].detach().numpy()
+# for sample in range(num_samples):
+#     # Rest of the code to generate the GIF for each sample
+#     image_buffers = []
+#     test_y = true[sample,...].detach().numpy()
+#     predicted_y = pred_un[sample,...].detach().numpy()
 
-    for t in range(61):
-        buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
-        image_buffers.append(buf)
+#     for t in range(61):
+#         buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
+#         image_buffers.append(buf)
 
-    images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
-    buf_result = BytesIO()
-    imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
+#     images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
+#     buf_result = BytesIO()
+#     imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
 
-    # Save the GIF
-    gif_save_path = os.path.join(image_folder, f'{model_name}_{sample}.gif')
-    with open(gif_save_path, 'wb') as f:
-        f.write(buf_result.getvalue())
-        buf_result.seek(0)
+#     # Save the GIF
+#     gif_save_path = os.path.join(image_folder, f'{model_name}_{sample}.gif')
+#     with open(gif_save_path, 'wb') as f:
+#         f.write(buf_result.getvalue())
+#         buf_result.seek(0)
 
-    for buf in image_buffers:
-        buf.close()
+#     for buf in image_buffers:
+#         buf.close()
     
-    # Store the GIF path in the list
-    gif_paths.append(gif_save_path)
+#     # Store the GIF path in the list
+#     gif_paths.append(gif_save_path)
 
 # image_buffers = []
 # test_y = true[sample,...].detach().numpy()
