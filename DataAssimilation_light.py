@@ -151,7 +151,7 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAME
 
 prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = prior_model_inputs.unsqueeze(0)
-prior_model_inputs_leaf = torch.tensor(prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS], requires_grad=True)
+prior_model_inputs_leaf = torch.tensor(prior_model_inputs, requires_grad=True)
 
 
 
@@ -199,7 +199,7 @@ for step in range(num_steps):
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
-            prior_model_inputs_leaf[:, :, :, UNKNOWN_PARAMETERS]) ** 2
+            prior_model_inputs_leaf[:,:, :, :, UNKNOWN_PARAMETERS]) ** 2
     else:
         loss = F.mse_loss(observed, pred_un, reduction='mean')
 

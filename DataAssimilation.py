@@ -176,7 +176,7 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1,:, :, UNKNOWN_PARAMET
 prior_model_inputs = test_a[prior_model,:,:, :, :] 
 prior_model_inputs = prior_model_inputs.unsqueeze(0) #this needs to require grad
 
-prior_model_inputs_leaf = torch.tensor(prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS], requires_grad=True)
+prior_model_inputs_leaf = torch.tensor(prior_model_inputs, requires_grad=True)
 
 predicted =  pred_un.detach().numpy()[prior_model,:, x, y, 0]
 initial_map = a_normalizer.decode(test_a)[prior_model, -1,:, :, UNKNOWN_PARAMETERS]
