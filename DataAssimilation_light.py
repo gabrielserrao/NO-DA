@@ -215,6 +215,9 @@ for step in range(num_steps):
     with open(loss_log, 'a') as f:
         f.write(f'epoch {step}: t={t2 - t1:.3f}, mse={loss.item():.3e}\n')
 
+    if step == 0: #create the prior case
+        prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
+
     if step % 10 == 0:
         fig, ax = plt.subplots(ncols=2, nrows=1)
         ax[0].imshow(true_map.detach().numpy(), cmap='jet')
@@ -228,7 +231,7 @@ for step in range(num_steps):
         fig, main_ax = plt.subplots()
 
         main_ax.plot(time, observed, color='red', label='Reference case - true')
-        main_ax.plot(time, pred_un.detach().numpy(), color='blue', linestyle='--', label='Prior case - FNO')
+        main_ax.plot(time, prior_data, color='blue', linestyle='--', label='Prior case - FNO')
         main_ax.plot(time, y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0], color='green', linestyle='--', label='Posterior case - FNO')
         main_ax.legend()
         main_ax.set_xlabel('Time')
