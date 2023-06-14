@@ -19,22 +19,25 @@ output_vars = ['CO_2']
 
 
 
-num_files= 1000
+num_files= 100
 traintest_split = 0.8
 
-batch_size = 61
+batch_size = 1
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 500 
+epochs = 10 
 
 
 iterations = epochs*(ntrain//batch_size)
 modes = 12
-width = 128 
+width = 32 
 
+################################################################
+# configs-2
+################################################################
 # Prepare the path
 path = 'fourier_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
 
