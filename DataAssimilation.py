@@ -297,7 +297,7 @@ for step in range(num_steps):
         plt.savefig(os.path.join(results_folder, f'Initial_overview_prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_step{step}.png'))
 
         plt.show()
-        plt.savefig(os.path.join(image_folder, f'Optimim_{step}.png'))
+        
         plt.close()
 
         #plot current  parameter_values AND THE REFERENCE PERMEABILITY VALUES
