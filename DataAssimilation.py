@@ -51,6 +51,7 @@ prior_model =27
 # Define the number of optimization steps
 num_steps = 100
 regularization_weight = 0.0
+learning_rate = 0.01 #ADAM learning rate
 
 UNKNOWN_PARAMETERS = 1 # 1 - PERMEABILITY, 2 - POROSITY
 
@@ -230,7 +231,7 @@ import os
 prior_response = pred_un.detach().numpy()[prior_model,:, x, y, 0]
 reference_response = true.detach().numpy() [reference_model,:, x, y, 0]
 # Initialize the optimizer, we will use Adam here
-optimizer = optim.Adam([prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS]], lr=0.01)  # Adjust learning rate as needed
+optimizer = optim.Adam([prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS]], lr=learning_rate)  # Adjust learning rate as needed
 
 
 fig, ax = plt.subplots()
