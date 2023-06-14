@@ -195,7 +195,7 @@ modes = 12
 width = 128 
 
 # Prepare the path
-path = 'ns_fourier_3d_N{}_ep{}_m{}_w{}'.format(ntrain, epochs, modes, width)
+path = 'fourier_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
 
 # Include in the path the input and output variables
 path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
@@ -203,7 +203,7 @@ path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
 # Create paths for log, model, and images
 path_log = os.path.join('runs', path, 'log')
 # Modify here: 'model.pt' will be the filename, not a subdirectory
-path_model = os.path.join('runs', path, 'model.pt') 
+path_model = os.path.join('runs', path, f'{path}_model.pt') 
 path_image = os.path.join('runs', path, 'images')
 
 # Create directories
@@ -257,6 +257,14 @@ test_a = a_normalizer.encode(test_a)
 y_normalizer = UnitGaussianNormalizer(train_u)
 train_u = y_normalizer.encode(train_u)
 test_u = y_normalizer.encode(test_u)
+
+#save normalizers on path_model with the name of the path
+torch.save(a_normalizer.mean, os.path.join(os.path.dirname(path_model), f'{path}_a_normalizer_mean.pt'))
+torch.save(a_normalizer.std, os.path.join(os.path.dirname(path_model), f'{path}_a_normalizer_std.pt'))
+
+torch.save(y_normalizer.mean, os.path.join(os.path.dirname(path_model), f'{path}_y_normalizer_mean.pt'))
+torch.save(y_normalizer.std, os.path.join(os.path.dirname(path_model), f'{path}_y_normalizer_std.pt'))
+
 
 t2 = default_timer()
 #print shapes of normalized input and output data tensors
