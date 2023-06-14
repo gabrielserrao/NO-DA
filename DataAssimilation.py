@@ -306,8 +306,9 @@ for step in range(num_steps):
         ax[0].set_title(f'Reference permeability values')
         ax[1].imshow(prior_model_inputs[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
         ax[1].set_title(f'Initial permeability values')
-        plt.show()
         plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
+        plt.show()
+       
         plt.close()
    
         #plot current  observed and predicted values pred_un
