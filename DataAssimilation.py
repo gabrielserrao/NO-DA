@@ -160,7 +160,7 @@ print(f'Number of parameters: {sum(p.numel() for p in model.parameters())}')
 pred = model(test_a).to(device)
 pred_un = y_normalizer.decode(pred).to(device)
 
-# %%
+
 #list to store the predicted values and intermediate permeability values
 predicted_values = []
 parameter_values = []
@@ -298,21 +298,23 @@ for step in range(num_steps):
         plt.savefig(os.path.join(image_folder, f'Optimim_{step}.png'))
         plt.close()
 
-        #plot current  parameter_values
-        fig, ax = plt.subplots()
-        ax.imshow(prior_model_inputs[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
-        ax.set_title(f'Permeability values at step {step}')
+        #plot current  parameter_values AND THE REFERENCE PERMEABILITY VALUES
+        fig, ax = plt.subplots(ncols=2, nrows=1)
+        ax[0].imshow(true_map.detach().numpy(), cmap='jet')
+        ax[0].set_title(f'Reference permeability values')
+        ax[1].imshow(prior_model_inputs[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
+        ax[1].set_title(f'Initial permeability values')
         plt.show()
-        plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))       
+        plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
         plt.close()
-
+   
         #plot current  observed and predicted values pred_un
 
         fig, main_ax = plt.subplots()
         # Plot all models in light gray   
 
         main_ax.plot(time, observed, color='red', label = 'Reference case - true')
-        main_ax.plot(time, pred_un, color='blue', linestyle ='--',  label = 'Prior case - FNO') 
+        main_ax.plot(time, pred_un.detach().numpy(), color='blue', linestyle ='--',  label = 'Prior case - FNO') 
         #include posterior case only after 10 steps
         main_ax.plot(time, y_normalizer.decode(pred).detach().numpy()[0,:, x, y, 0], color='green', linestyle ='--',  label = 'Posterior case - FNO')
         main_ax.legend()
