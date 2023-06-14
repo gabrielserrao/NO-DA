@@ -174,7 +174,8 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1,:, :, UNKNOWN_PARAMET
 
 #prior data
 prior_model_inputs = test_a[prior_model,:,:, :, :] 
-prior_model_inputs = prior_model_inputs.unsqueeze(0)
+prior_model_inputs = prior_model_inputs.unsqueeze(0) #this needs to require grad
+prior_model_inputs.requires_grad = True
 
 predicted =  pred_un.detach().numpy()[prior_model,:, x, y, 0]
 initial_map = a_normalizer.decode(test_a)[prior_model, -1,:, :, UNKNOWN_PARAMETERS]
@@ -271,7 +272,7 @@ for step in range(num_steps):
     #print mse, l2 for train and test data for each epoch
     print(f'ep {step}: t={t2-t1:.3f}, mse={loss.item():.3e}')
     #save loss on disk
-    with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step.txt'), 'w') as f:   
+    with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step.txt'), 'a') as f:   
          f.write(f'epoch {step}: t={t2-t1:.3f}, mse={loss.item():.3e}\n')
        
     if step % 10 == 0:
