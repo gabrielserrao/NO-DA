@@ -21,14 +21,17 @@ traintest_split = 0.8
 num_samples = 10  # Number of samples to see results
 #CASE CONFIGURATION
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-variable = 'CO_2'
+variable = 'Pressure'
 output_vars = [variable]
 case_name = 'VINI_ns_fourier_3d_N800.0_ep500_m12_w128_b61_padding4' + '_' + variable
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
-plot_lines = True
 plot_model_eval =True
+plot_comparison = True
+plot_lines = True
+plot_gifs =True
+
 
 ###############################################
 
@@ -202,43 +205,39 @@ pred = model(test_a)
 pred_un = y_normalizer.decode(pred)
 
 # %%
+if plot_comparison:
+    for index in range(num_samples):
+        test_y = true[index,...].detach().numpy()
+        predicted_y = pred_un[index,...].detach().numpy()
 
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+        norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
 
-for index in range(num_samples):
-    test_y = true[index,...].detach().numpy()
-    predicted_y = pred_un[index,...].detach().numpy()
+        img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
+        img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
+        img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
 
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
-    norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
+        for img, ax in zip([img1, img2], axes[:2]):
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            fig.colorbar(img, cax=cax, orientation='vertical')
 
-    img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
-    img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
-    img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
-
-    for img, ax in zip([img1, img2], axes[:2]):
-        divider = make_axes_locatable(ax)
+        divider = make_axes_locatable(axes[2])
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        fig.colorbar(img, cax=cax, orientation='vertical')
+        fig.colorbar(img3, cax=cax, orientation='vertical')
 
-    divider = make_axes_locatable(axes[2])
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(img3, cax=cax, orientation='vertical')
+        axes[0].set_title(f'Test - Sample {index+1}')
+        axes[1].set_title(f'Predicted  - Sample {index+1}')
+        axes[2].set_title(f'Absolute Error - Sample {index+1}')
 
-    axes[0].set_title(f'Test - Sample {index+1}')
-    axes[1].set_title(f'Predicted  - Sample {index+1}')
-    axes[2].set_title(f'Absolute Error - Sample {index+1}')
+        for ax in axes:
+            ax.axis('off')
 
-    for ax in axes:
-        ax.axis('off')
-
-    fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
-    plt.tight_layout()
-    plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
-    plt.show()
-    
-
-
-
+        fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
+        plt.tight_layout()
+        plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
+        plt.show()
+        
 
 # %%
 # Given x and y arrays
@@ -283,8 +282,8 @@ if plot_lines:
                 fig, main_ax = plt.subplots()
 
                 # Plot your data on the main axes
-                main_ax.plot(time, test_y[:, x, y, 0], label='True')
-                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted')
+                main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='-')
+                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='o')
                 main_ax.legend()
 
                 # Set labels and title for the main figure
@@ -316,7 +315,6 @@ if plot_lines:
 
 
 # %%
-
 def plot_to_memory_image(true, predicted, time_step, variable):
     buf = BytesIO()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
@@ -332,10 +330,36 @@ def plot_to_memory_image(true, predicted, time_step, variable):
     buf.seek(0)
     return buf
 
-gif_paths = []
+if plot_gifs == True:
 
-for sample in range(num_samples):
-    # Rest of the code to generate the GIF for each sample
+    gif_paths = []
+
+    for sample in range(num_samples):
+        # Rest of the code to generate the GIF for each sample
+        image_buffers = []
+        test_y = true[sample,...].detach().numpy()
+        predicted_y = pred_un[sample,...].detach().numpy()
+
+        for t in range(61):
+            buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
+            image_buffers.append(buf)
+
+        images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
+        buf_result = BytesIO()
+        imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
+
+        # Save the GIF
+        gif_save_path = os.path.join(image_folder, f'{case_name}_{sample}.gif')
+        with open(gif_save_path, 'wb') as f:
+            f.write(buf_result.getvalue())
+            buf_result.seek(0)
+
+        for buf in image_buffers:
+            buf.close()
+
+        # Store the GIF path in the list
+        gif_paths.append(gif_save_path)
+
     image_buffers = []
     test_y = true[sample,...].detach().numpy()
     predicted_y = pred_un[sample,...].detach().numpy()
@@ -348,40 +372,16 @@ for sample in range(num_samples):
     buf_result = BytesIO()
     imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
 
-    # Save the GIF
-    gif_save_path = os.path.join(image_folder, f'{case_name}_{sample}.gif')
+    gif_save_path = os.path.join(image_folder, f'{case_name}_{sample+1}.gif')
     with open(gif_save_path, 'wb') as f:
         f.write(buf_result.getvalue())
-        buf_result.seek(0)
+
+    buf_result.seek(0)
 
     for buf in image_buffers:
         buf.close()
 
-    # Store the GIF path in the list
-    gif_paths.append(gif_save_path)
-
-image_buffers = []
-test_y = true[sample,...].detach().numpy()
-predicted_y = pred_un[sample,...].detach().numpy()
-
-for t in range(61):
-    buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
-    image_buffers.append(buf)
-
-images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
-buf_result = BytesIO()
-imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
-
-gif_save_path = os.path.join(image_folder, f'{case_name}_{sample+1}.gif')
-with open(gif_save_path, 'wb') as f:
-    f.write(buf_result.getvalue())
-
-buf_result.seek(0)
-
-for buf in image_buffers:
-    buf.close()
-
-DisplayImage(buf_result.getvalue(), format='png')
+    DisplayImage(buf_result.getvalue(), format='png')
 
 # %%
 
