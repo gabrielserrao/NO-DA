@@ -194,12 +194,12 @@ for step in range(num_steps):
     print(f'Step {step} of {num_steps}')
     t1 = default_timer()
     optimizer.zero_grad()
-    pred = model(prior_model_inputs)
+    pred = model(prior_model_inputs_leaf)
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
-            prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS]) ** 2
+            prior_model_inputs_leaf[:, :, :, UNKNOWN_PARAMETERS]) ** 2
     else:
         loss = F.mse_loss(observed, pred_un, reduction='mean')
 
@@ -207,7 +207,7 @@ for step in range(num_steps):
     optimizer.step()
 
     predicted_values.append(pred_un.detach().numpy())
-    parameter_values.append(prior_model_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy())
+    parameter_values.append(prior_model_inputs_leaf[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy())
     loss_values.append(loss.item())
     t2 = default_timer()
 
@@ -219,7 +219,7 @@ for step in range(num_steps):
         fig, ax = plt.subplots(ncols=2, nrows=1)
         ax[0].imshow(true_map.detach().numpy(), cmap='jet')
         ax[0].set_title(f'Reference permeability values')
-        ax[1].imshow(prior_model_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
+        ax[1].imshow(prior_model_inputs_leaf[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
         ax[1].set_title(f'Initial permeability values')
         plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
         plt.show()
