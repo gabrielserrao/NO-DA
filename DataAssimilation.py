@@ -244,12 +244,12 @@ for step in range(num_steps):
     print(f'Step {step} of {num_steps}')
     t1 = default_timer()
     optimizer.zero_grad()  # Clear previous gradients
-    pred = model(prior_model_inputs)
+    pred = model(prior_model_inputs_leaf)
  
     pred_un = y_normalizer.decode(pred)[0,:,x,y,0]   
 
     if regularization_weight > 0.0:
-        loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS])**2
+        loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(prior_model_inputs_leaf[:,:,:,UNKNOWN_PARAMETERS])**2
     else:    
         loss = F.mse_loss(observed, pred_un, reduction='mean')
 
@@ -264,7 +264,7 @@ for step in range(num_steps):
     predicted_values.append(pred_un.detach().numpy())
 
     # Store the current permeability values
-    parameter_values.append(prior_model_inputs[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy())
+    parameter_values.append(prior_model_inputs_leaf[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy())
 
     #apend loss to list
     loss_values.append(loss.item())
