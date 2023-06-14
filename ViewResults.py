@@ -58,7 +58,7 @@ if not os.path.exists(image_folder):
 
 
 if variable == 'CO_2':
-    colorbar_vmax, colorbar_vmin = 0.0, 1.0 # Define your min and max here
+    colorbar_vmax, colorbar_vmin = 1.0, 0.0 # Define your min and max here
 elif variable == 'Pressure':
     colorbar_vmin, colorbar_vmax = 200.0, 600.0 # Define your min and max here
   # Change this to the index you want
@@ -282,8 +282,8 @@ if plot_lines:
                 fig, main_ax = plt.subplots()
 
                 # Plot your data on the main axes
-                main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='-')
-                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='o')
+                main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='solid', color = 'blue')
+                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='none', marker='o', color = 'red')
                 main_ax.legend()
 
                 # Set labels and title for the main figure
