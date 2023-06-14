@@ -40,14 +40,19 @@ plot_gifs =True
 
 #DATA ASSIMILATION CONFIGURATION
 
-results_folder = '/scratch/smrserraoseabr/Projects/NO-DA/runs/TESTES/images'
+results_folder = '/scratch/smrserraoseabr/Projects/NO-DA/runs/TESTES'
 #data assimilation parameters
+
 x= 28
 y= 3
 reference_model = 193
 prior_model =27 
 # Define the number of optimization steps
 num_steps = 1000
+regularization_weight = 0.0
+
+UNKNOWN_PARAMETERS = 1 # 1 - PERMEABILITY, 2 - POROSITY
+
 ###############################################
 
 
@@ -153,19 +158,15 @@ pred = model(test_a)
 pred_un = y_normalizer.decode(pred)
 
 
-
-
-
-
 # %%
 #list to store the predicted values and intermediate permeability values
 predicted_values = []
-permeability_values = []
+parameter_values = []
 loss_values = []
 #Define inputs for optimization 
 #reference data
 observed = true[reference_model,:, x, y, 0]
-true_perm_map = a_normalizer.decode(test_a)[reference_model, -1,:, :, 1]
+true_map = a_normalizer.decode(test_a)[reference_model, -1,:, :, UNKNOWN_PARAMETERS]
 
 
 #prior data
@@ -173,7 +174,7 @@ prior_model_inputs = test_a[prior_model,:,:, :, :]
 prior_model_inputs = prior_model_inputs.unsqueeze(0)
 
 predicted =  pred_un.detach().numpy()[prior_model,:, x, y, 0]
-initial_perm_map = a_normalizer.decode(test_a)[prior_model, -1,:, :, 1]
+initial_map = a_normalizer.decode(test_a)[prior_model, -1,:, :, UNKNOWN_PARAMETERS]
 
 # %%
 from torch import optim
@@ -182,18 +183,9 @@ import os
 #%%
 # Define the loss function as the difference between observed data and predicted data
 
-
-
-#regularization_weight = 0.01
-
-
 # Initialize the optimizer, we will use Adam here
-optimizer = optim.Adam([prior_model_inputs[:,:,:,1]], lr=0.01)  # Adjust learning rate as needed
+optimizer = optim.Adam([prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS]], lr=0.01)  # Adjust learning rate as needed
 
-
-
-
-DA_mse= 0.0
 
 fig, ax = plt.subplots()
 
@@ -202,24 +194,24 @@ for step in range(num_steps):
     optimizer.zero_grad()  # Clear previous gradients
     pred = model(prior_model_inputs)
     pred_un = y_normalizer.decode(pred)[0,:,x,y,0]   
-    
-    loss = F.mse_loss(observed, pred_un, reduction='mean')
+
+    if regularization_weight > 0.0:
+        loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS])**2
+    else:    
+        loss = F.mse_loss(observed, pred_un, reduction='mean')
 
     # Compute the loss WITH A SINGLE POINT
-    #loss = loss_fn(observed, pred_un) + regularization_weight * torch.norm(prior_model_inputs[:,:,:,1])**2
+    #loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(prior_model_inputs[:,:,:,1])**2
     
 
     loss.backward()  # Compute the gradients
-    optimizer.step()  # Update the parameters using the gradients
-
-
-      
+    optimizer.step()  # Update the parameters using the gradients      
 
     # Store the current predicted values
     predicted_values.append(pred_un.detach().numpy())
 
     # Store the current permeability values
-    permeability_values.append(prior_model_inputs[0, -1,:, :, 1].detach().numpy())
+    parameter_values.append(prior_model_inputs[0, -1,:, :, UNKNOWN_PARAMETERS].detach().numpy())
 
     #apend loss to list
     loss_values.append(loss.item())
@@ -237,7 +229,7 @@ for step in range(num_steps):
         with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_predicted_values_step{step}.pkl'), 'wb') as f:
             pickle.dump(predicted_values, f)
         with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_permeability_values_step{step}.pkl'), 'wb') as f:
-            pickle.dump(permeability_values, f)
+            pickle.dump(parameter_values, f)
         with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step{step}.pkl'), 'wb') as f:
             pickle.dump(loss_values, f)
 
@@ -245,7 +237,7 @@ for step in range(num_steps):
 with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_predicted_values_step{step}.pkl'), 'wb') as f:
     pickle.dump(predicted_values, f)
 with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_permeability_values_step{step}.pkl'), 'wb') as f:
-    pickle.dump(permeability_values, f)
+    pickle.dump(parameter_values, f)
 with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step{step}.pkl'), 'wb') as f:
     pickle.dump(loss_values, f)
 
