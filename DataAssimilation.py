@@ -268,7 +268,7 @@ for step in range(num_steps):
     loss_values.append(loss.item())
     t2 = default_timer()
 
-        #print mse, l2 for train and test data for each epoch
+    #print mse, l2 for train and test data for each epoch
     print(f'ep {step}: t={t2-t1:.3f}, train_mse={loss.item():.3e}')
     #save loss on disk
     with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step.txt'), 'w') as f:   
