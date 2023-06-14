@@ -4,7 +4,7 @@
 #SBATCH --partition=memory
 #SBATCH --time=12:00:00
 #SBATCH --account=research-ceg-gse
-#SBATCH --mem=200G
+#SBATCH --mem=500G
 ##add log file
 #SBATCH --output=slurm-%x-%j.out
 ##error file

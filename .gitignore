@@ -2,6 +2,9 @@ dataset/
 model/
 results/
 runs/
+python_tests/
+__pycache__/
+CHECK/
 #Ignore all images#
 *.png
 *.jpg
@@ -9,6 +12,10 @@ runs/
 *.gif
 *.out
 *.err
+*.sh
+
+Gradients_PyTorch.ipynb
+DebugFNO.ipynb
 
 
 
