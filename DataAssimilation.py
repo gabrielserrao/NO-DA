@@ -175,7 +175,8 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1,:, :, UNKNOWN_PARAMET
 #prior data
 prior_model_inputs = test_a[prior_model,:,:, :, :] 
 prior_model_inputs = prior_model_inputs.unsqueeze(0) #this needs to require grad
-prior_model_inputs.requires_grad = True
+
+prior_model_inputs_leaf = torch.tensor(prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS], requires_grad=True)
 
 predicted =  pred_un.detach().numpy()[prior_model,:, x, y, 0]
 initial_map = a_normalizer.decode(test_a)[prior_model, -1,:, :, UNKNOWN_PARAMETERS]
@@ -234,8 +235,8 @@ import os
 prior_response = pred_un.detach().numpy()[prior_model,:, x, y, 0]
 reference_response = true.detach().numpy() [reference_model,:, x, y, 0]
 # Initialize the optimizer, we will use Adam here
-optimizer = optim.Adam([prior_model_inputs[:,:,:,UNKNOWN_PARAMETERS]], lr=learning_rate)  # Adjust learning rate as needed
 
+optimizer = optim.Adam([prior_model_inputs_leaf], lr=learning_rate)
 
 fig, ax = plt.subplots()
 

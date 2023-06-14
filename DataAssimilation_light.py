@@ -151,7 +151,9 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAME
 
 prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = prior_model_inputs.unsqueeze(0)
-prior_model_inputs.requires_grad = True
+prior_model_inputs_leaf = torch.tensor(prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS], requires_grad=True)
+
+
 
 predicted = pred_un.detach().numpy()[prior_model, :, x, y, 0]
 initial_map = a_normalizer.decode(test_a)[prior_model, -1, :, :, UNKNOWN_PARAMETERS]
@@ -184,7 +186,7 @@ plt.close()
 #%%
 loss_log = os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step.txt')
 
-optimizer = optim.Adam([prior_model_inputs[:, :, :, UNKNOWN_PARAMETERS]], lr=learning_rate)
+optimizer = optim.Adam([prior_model_inputs_leaf], lr=learning_rate)
 
 fig, ax = plt.subplots()
 
