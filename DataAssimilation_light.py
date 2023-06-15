@@ -149,16 +149,16 @@ loss_values = []
 observed = true[reference_model, :, x, y, 0]
 true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAMETERS]
 
-prior_model_inputs = test_a[prior_model, :, :, :, :]
-prior_model_inputs = prior_model_inputs.unsqueeze(0)
-prior_model_inputs_leaf = torch.tensor(prior_model_inputs, requires_grad=True)
-
-
+#prior_model_inputs = test_a[prior_model, :, :, :, :]
+prior_model_inputs = a_normalizer.decode(test_a)[prior_model, :, :, :, :].unsqueeze(0)
+prior_model_inputs_PARAM_leaf = torch.tensor(torch.log(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS]), requires_grad=True)
 
 
 predicted = pred_un.detach().numpy()[prior_model, :, x, y, 0]
 initial_map = a_normalizer.decode(test_a)[prior_model, -1, :, :, UNKNOWN_PARAMETERS]
 
+
+#PLOT AN OVERVIEW OF THE PRIOR AND THE REFERENCE CASE
 fig, main_ax = plt.subplots()
 
 time = pred_un[0, :, 0, 0, 0].detach().numpy()
@@ -187,9 +187,11 @@ plt.close()
 #%%
 loss_log = os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step.txt')
 
-optimizer = optim.Adam([prior_model_inputs_leaf], lr=learning_rate)
 
-fig, ax = plt.subplots()
+optimizer = optim.Adam([prior_model_inputs_PARAM_leaf], lr=learning_rate)
+
+
+
 
 for step in range(num_steps):
     print(f'Step {step} of {num_steps}')
@@ -197,23 +199,26 @@ for step in range(num_steps):
     t1 = default_timer()
     optimizer.zero_grad()
 
-    pred = model(prior_model_inputs_leaf)
+    
+    prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS].unsqueeze(-1).copy_(torch.exp(prior_model_inputs_PARAM_leaf).unsqueeze(-1))
+
+    pred = model(a_normalizer.encode(prior_model_inputs))
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
 
 
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
-            prior_model_inputs_leaf[:,:, :, :, UNKNOWN_PARAMETERS]) ** 2
+            prior_model_inputs[:,:, :, :, UNKNOWN_PARAMETERS]) ** 2
     else:
         loss = F.mse_loss(observed, pred_un, reduction='mean')
 
-    loss.backward()
+    loss.backward(retain_graph=True)
+    #loss.backward()
     optimizer.step()
 
-
     predicted_values.append(pred_un.detach().numpy())
-    decoded_perm = a_normalizer.decode(prior_model_inputs_leaf).detach().numpy()
+    decoded_inputs= prior_model_inputs.detach().numpy()
 
 
         
@@ -222,7 +227,7 @@ for step in range(num_steps):
         #prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS] 
         
  
-    parameter_values.append(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS])
+    parameter_values.append(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS])
     loss_values.append(loss.item())
     t2 = default_timer()
 
@@ -243,7 +248,7 @@ for step in range(num_steps):
         ax[1].set_title(f'Prior permeability')
         ax[1].axis('off')
         #posterior
-        ax[2].imshow(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
+        ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
         ax[2].set_title(f'Posterior permeability')
         ax[2].axis('off')
         #include the difference between the true and the prior
@@ -263,10 +268,10 @@ for step in range(num_steps):
         #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
         fig, ax = plt.subplots()
         ax.hist(true_map.detach().numpy().flatten(), bins=bin_number, alpha=0.5, label='Reference case', color='red')
-        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
+        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
         #compute the mean of each
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
-        ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
         #include prior perm mean
         ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
 
@@ -278,10 +283,10 @@ for step in range(num_steps):
         #histogram of the prior and posterior permeability values
         fig, ax = plt.subplots()
         ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior case', color='blue')
-        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
+        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
         #compute the mean of each
         ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior case mean')
-        ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='red', linestyle='--', label='Posterior case mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='red', linestyle='--', label='Posterior case mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_prior_{prior_model}_posterior.png'))
