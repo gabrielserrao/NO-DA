@@ -281,7 +281,7 @@ for step in range(num_steps):
         # Create an axes on the right side of ax. The width of cax will be 5%
         # of ax and the padding between cax and ax will be fixed at 0.05 inch.
         # Add colorbar
-        cbar_ax = fig.add_axes([0.92, 0.2, 0.02, 0.5]) #left, bottom, width, height
+        cbar_ax = fig.add_axes([0.92, 0.2, 0.025, 0.5]) #left, bottom, width, height
         fig.colorbar(ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS] - initial_map, cmap='RdBu_r'), cax=cbar_ax)    
 
         plt.savefig(os.path.join(results_folder, f'Permeability_difference_{step}.png'))
