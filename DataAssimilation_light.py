@@ -16,7 +16,7 @@ from model_fourier_3d import *
 
 # DATASET
 data_folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
-num_files = 1000
+num_files = 1001
 traintest_split = 0.8
 
 # CASE CONFIGURATION
