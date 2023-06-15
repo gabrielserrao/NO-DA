@@ -177,7 +177,7 @@ main_ax.set_title(f'Montintoring {variable} at x={x} and y={y}')
 
 left, bottom, width, height = [0.2, 0.4, 0.2, 0.2]  # Adjust as needed
 inset_ax = fig.add_axes([left, bottom, width, height])
-im = inset_ax.imshow(test_a[reference_model, -1, :, :, UNKNOWN_PARAMETERS], cmap='viridis')
+im = inset_ax.imshow(test_a[reference_model, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
 inset_ax.scatter(x, y, s=20, edgecolor='red', facecolor='none', linewidth=2)
 inset_ax.axis('off')
 
@@ -239,16 +239,16 @@ for step in range(num_steps):
     if step % 10 == 0:
         fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(12, 5)) 
         #true               
-        ax[0].imshow(true_map.detach().numpy(), cmap='viridis')
+        ax[0].imshow(true_map.detach().numpy(), cmap='jet')
         ax[0].set_title(f'Reference permeability')
         #turnoff axis
         ax[0].axis('off')
         #prior
-        ax[1].imshow(initial_map, cmap='viridis')
+        ax[1].imshow(initial_map, cmap='jet')
         ax[1].set_title(f'Prior permeability')
         ax[1].axis('off')
         #posterior
-        ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='viridis')
+        ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
         ax[2].set_title(f'Posterior permeability')
         ax[2].axis('off')
         #include the difference between the true and the prior
