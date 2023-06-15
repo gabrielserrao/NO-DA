@@ -151,7 +151,7 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAME
 
 #prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = a_normalizer.decode(test_a)[prior_model, :, :, :, :].unsqueeze(0)
-prior_model_inputs_PARAM_leaf = torch.tensor(torch.log(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS]), requires_grad=True)
+prior_model_inputs_PARAM_leaf = torch.tensor(torch.log(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS]), requires_grad=True).to(device)
 
 
 predicted = pred_un.detach().numpy()[prior_model, :, x, y, 0]
