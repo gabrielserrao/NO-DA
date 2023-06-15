@@ -140,6 +140,7 @@ print('Model loaded')
 print(f'Number of parameters: {sum(p.numel() for p in model.parameters())}')
 #%%
 pred = model(test_a).to(device)
+
 pred_un = y_normalizer.decode(pred).to(device)
 
 predicted_values = []
@@ -151,7 +152,8 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAME
 
 prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = prior_model_inputs.unsqueeze(0)
-prior_model_inputs_leaf = torch.tensor(prior_model_inputs, requires_grad=True)
+#prior_model_inputs_leaf = torch.tensor(prior_model_inputs, requires_grad=True)
+prior_model_inputs_leaf = torch.log(torch.tensor(prior_model_inputs, requires_grad=True))
 
 
 
@@ -194,7 +196,9 @@ for step in range(num_steps):
     print(f'Step {step} of {num_steps}')
     t1 = default_timer()
     optimizer.zero_grad()
-    pred = model(prior_model_inputs_leaf)
+    #pred = model(prior_model_inputs_leaf)
+    pred = model(torch.exp(prior_model_inputs_leaf))
+
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
 
     if regularization_weight > 0.0:
@@ -207,8 +211,9 @@ for step in range(num_steps):
     optimizer.step()
 
     predicted_values.append(pred_un.detach().numpy())
-    decoded_perm = a_normalizer.decode(prior_model_inputs_leaf).detach().numpy()
- 
+    #decoded_perm = a_normalizer.decode(prior_model_inputs_leaf).detach().numpy()
+    decoded_perm = a_normalizer.decode(torch.exp(prior_model_inputs_leaf)).detach().numpy()
+
     parameter_values.append(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS])
     loss_values.append(loss.item())
     t2 = default_timer()
@@ -233,8 +238,8 @@ for step in range(num_steps):
 
         #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
         fig, ax = plt.subplots()
-        ax.hist(true_map.detach().numpy().flatten(), bins=100, alpha=0.5, label='Reference case', color='red')
-        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=100, alpha=0.5, label='Posterior case', color='blue')
+        ax.hist(true_map.detach().numpy().flatten(), bins=50, alpha=0.5, label='Reference case', color='red')
+        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=50, alpha=0.5, label='Posterior case', color='blue')
         #compute the mean of each
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
         ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
