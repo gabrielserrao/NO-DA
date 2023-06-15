@@ -207,7 +207,9 @@ for step in range(num_steps):
     optimizer.step()
 
     predicted_values.append(pred_un.detach().numpy())
-    parameter_values.append(prior_model_inputs_leaf[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy())
+    decoded_perm = a_normalizer.decode(prior_model_inputs_leaf).detach().numpy()
+ 
+    parameter_values.append(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS])
     loss_values.append(loss.item())
     t2 = default_timer()
 
@@ -217,16 +219,34 @@ for step in range(num_steps):
 
     if step == 0: #create the prior case
         prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
+        prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS]
 
     if step % 10 == 0:
         fig, ax = plt.subplots(ncols=2, nrows=1)
         ax[0].imshow(true_map.detach().numpy(), cmap='jet')
         ax[0].set_title(f'Reference permeability values')
-        ax[1].imshow(prior_model_inputs_leaf[0, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy(), cmap='jet')
+        ax[1].imshow(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
         ax[1].set_title(f'Initial permeability values')
         plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
         plt.show()
         plt.close()
+
+        #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
+        fig, ax = plt.subplots()
+        ax.hist(true_map.detach().numpy().flatten(), bins=100, alpha=0.5, label='Reference case', color='red')
+        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=100, alpha=0.5, label='Posterior case', color='blue')
+        #compute the mean of each
+        ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
+        ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
+        #include prior perm mean
+        ax.axvline(prior_perm.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
+
+        ax.legend()
+        plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}.png'))
+        plt.show()
+        plt.close()
+
+
 
         fig, main_ax = plt.subplots()
 
