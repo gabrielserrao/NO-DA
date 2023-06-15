@@ -193,10 +193,17 @@ fig, ax = plt.subplots()
 
 for step in range(num_steps):
     print(f'Step {step} of {num_steps}')
+
     t1 = default_timer()
     optimizer.zero_grad()
+
     pred = model(prior_model_inputs_leaf)
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
+
+    
+    if step == 0: #create the prior case
+        prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
+        prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS]
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
@@ -219,16 +226,21 @@ for step in range(num_steps):
     with open(loss_log, 'a') as f:
         f.write(f'epoch {step}: t={t2 - t1:.3f}, mse={loss.item():.3e}\n')
 
-    if step == 0: #create the prior case
-        prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
-        prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS]
 
     if step % 10 == 0:
-        fig, ax = plt.subplots(ncols=2, nrows=1)
+        fig, ax = plt.subplots(ncols=3, nrows=1)
         ax[0].imshow(true_map.detach().numpy(), cmap='jet')
-        ax[0].set_title(f'Reference permeability values')
-        ax[1].imshow(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
-        ax[1].set_title(f'Initial permeability values')
+        ax[0].set_title(f'Reference permeability')
+        #turnoff axis
+        ax[0].axis('off')
+        #prior
+        ax[1].imshow(prior_perm, cmap='jet')
+        ax[1].set_title(f'Prior permeability')
+        ax[1].axis('off')
+        #posterior
+        ax[2].imshow(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
+        ax[2].set_title(f'Posterior permeability')
+        ax[2].axis('off')
         plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
         plt.show()
         plt.close()
