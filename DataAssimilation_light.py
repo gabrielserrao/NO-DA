@@ -200,10 +200,7 @@ for step in range(num_steps):
     pred = model(prior_model_inputs_leaf)
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
 
-    
-    if step == 0: #create the prior case
-        prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
-        prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS]
+
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
@@ -217,6 +214,13 @@ for step in range(num_steps):
 
     predicted_values.append(pred_un.detach().numpy())
     decoded_perm = a_normalizer.decode(prior_model_inputs_leaf).detach().numpy()
+
+
+        
+    if step == 0: #create the prior case
+        prior_data =  y_normalizer.decode(pred).detach().numpy()[0, :, x, y, 0]
+        #prior_perm = decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS] 
+        
  
     parameter_values.append(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS])
     loss_values.append(loss.item())
@@ -234,7 +238,7 @@ for step in range(num_steps):
         #turnoff axis
         ax[0].axis('off')
         #prior
-        ax[1].imshow(prior_perm, cmap='jet')
+        ax[1].imshow(initial_map, cmap='jet')
         ax[1].set_title(f'Prior permeability')
         ax[1].axis('off')
         #posterior
@@ -253,7 +257,7 @@ for step in range(num_steps):
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
         ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
         #include prior perm mean
-        ax.axvline(prior_perm.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
+        ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}.png'))
