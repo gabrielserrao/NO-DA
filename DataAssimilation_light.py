@@ -42,7 +42,7 @@ y = 3
 reference_model = 193
 prior_model = 27
 # Define the number of optimization steps
-num_steps = 200
+num_steps = 300
 regularization_weight = 0.0
 learning_rate = 0.01  # ADAM learning rate
 UNKNOWN_PARAMETERS = 1  # 1 - PERMEABILITY, 2 - POROSITY
@@ -281,7 +281,7 @@ for step in range(num_steps):
         # Create an axes on the right side of ax. The width of cax will be 5%
         # of ax and the padding between cax and ax will be fixed at 0.05 inch.
         # Add colorbar
-        cbar_ax = fig.add_axes([0.92, 0.2, 0.015, 0.5]) #left, bottom, width, height
+        cbar_ax = fig.add_axes([0.92, 0.2, 0.02, 0.5]) #left, bottom, width, height
         fig.colorbar(ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS] - initial_map, cmap='RdBu_r'), cax=cbar_ax)    
 
         plt.savefig(os.path.join(results_folder, f'Permeability_difference_{step}.png'))
@@ -308,7 +308,7 @@ for step in range(num_steps):
         #histogram of the prior and posterior permeability values
         fig, ax = plt.subplots()
         ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior', color='blue')
-        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior', color='green')
+        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior', color='blue')
         #compute the mean of each
         ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior mean')
         ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior mean')
