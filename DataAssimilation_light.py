@@ -163,10 +163,10 @@ fig, main_ax = plt.subplots()
 
 time = pred_un[0, :, 0, 0, 0].detach().numpy()
 
-main_ax.plot(time, true.detach().numpy()[reference_model, :, x, y, 0], color='red', label='Reference case - true')
-main_ax.plot(time, pred_un.detach().numpy()[reference_model, :, x, y, 0], color='red', linestyle='--', label='Reference case - FNO')
-main_ax.plot(time, true.detach().numpy()[prior_model, :, x, y, 0], color='blue', label='Prior case - true')
-main_ax.plot(time, pred_un.detach().numpy()[prior_model, :, x, y, 0], color='blue', linestyle='--', label='Prior case - FNO')
+main_ax.plot(time, true.detach().numpy()[reference_model, :, x, y, 0], color='red', label='Reference - true')
+main_ax.plot(time, pred_un.detach().numpy()[reference_model, :, x, y, 0], color='red', linestyle='--', label='Reference - FNO')
+main_ax.plot(time, true.detach().numpy()[prior_model, :, x, y, 0], color='blue', label='Prior - true')
+main_ax.plot(time, pred_un.detach().numpy()[prior_model, :, x, y, 0], color='blue', linestyle='--', label='Prior  - FNO')
 main_ax.legend()
 
 main_ax.set_xlabel('Time')
@@ -283,13 +283,13 @@ for step in range(num_steps):
 
         #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
         fig, ax = plt.subplots()
-        ax.hist(true_map.detach().numpy().flatten(), bins=bin_number, alpha=0.5, label='Reference case', color='red')
-        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
+        ax.hist(true_map.detach().numpy().flatten(), bins=bin_number, alpha=0.5, label='Reference', color='red')
+        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior', color='green')
         #compute the mean of each
-        ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
-        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior case mean')
+        ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior mean')
         #include prior perm mean
-        ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
+        ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_reference_{reference_model}_prior_{prior_model}.png'))
@@ -298,11 +298,11 @@ for step in range(num_steps):
 
         #histogram of the prior and posterior permeability values
         fig, ax = plt.subplots()
-        ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior case', color='blue')
-        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
+        ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior', color='blue')
+        ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior', color='green')
         #compute the mean of each
-        ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior case mean')
-        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
+        ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_prior_{prior_model}_posterior.png'))
