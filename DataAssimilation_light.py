@@ -263,6 +263,22 @@ for step in range(num_steps):
         plt.show()
         plt.close()
 
+        #Separete figure to show difference between true and prior permeability Abssolute and relative
+        fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(12, 5))
+        #include the difference between the true and the prior
+        ax[0].imshow(np.abs(true_map.detach().numpy() - initial_map), cmap='jet')
+        ax[0].set_title(f'Difference - true and prior')
+        ax[0].axis('off')
+        #include the difference between the true and the posterior
+        ax[1].imshow(np.abs(true_map.detach().numpy() - decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS]), cmap='jet')
+        ax[1].set_title(f'Difference - true and posterior')
+        ax[1].axis('off')
+        #compute relavite difference between posterior and prior
+        ax[2].imshow(np.abs(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS] - initial_map)/initial_map, cmap='jet')
+        ax[2].set_title(f'Relative Difference - posterior and prior')
+        ax[2].axis('off')
+        plt.savefig(os.path.join(results_folder, f'Permeability_difference_{step}.png'))
+
         bin_number = 25
 
         #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
