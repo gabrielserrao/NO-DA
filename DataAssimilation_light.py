@@ -155,7 +155,7 @@ prior_model_inputs_PARAM_leaf = torch.tensor(torch.log(prior_model_inputs[:, :, 
 
 
 predicted = pred_un.detach().numpy()[prior_model, :, x, y, 0]
-initial_map = a_normalizer.decode(test_a)[prior_model, -1, :, :, UNKNOWN_PARAMETERS]
+initial_map = a_normalizer.decode(test_a)[prior_model, -1, :, :, UNKNOWN_PARAMETERS].detach().numpy()
 
 
 #PLOT AN OVERVIEW OF THE PRIOR AND THE REFERENCE CASE
