@@ -258,10 +258,12 @@ for step in range(num_steps):
         plt.show()
         plt.close()
 
+        bin_number = 25
+
         #plot histograms of true and predicted values for permeability on the same plot, with the mean of each - include alpha to be able to see both
         fig, ax = plt.subplots()
-        ax.hist(true_map.detach().numpy().flatten(), bins=50, alpha=0.5, label='Reference case', color='red')
-        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=50, alpha=0.5, label='Posterior case', color='blue')
+        ax.hist(true_map.detach().numpy().flatten(), bins=bin_number, alpha=0.5, label='Reference case', color='red')
+        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
         #compute the mean of each
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
         ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
@@ -269,9 +271,23 @@ for step in range(num_steps):
         ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
 
         ax.legend()
-        plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}.png'))
+        plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_reference_{reference_model}_prior_{prior_model}.png'))
         plt.show()
         plt.close()
+
+        #histogram of the prior and posterior permeability values
+        fig, ax = plt.subplots()
+        ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior case', color='blue')
+        ax.hist(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
+        #compute the mean of each
+        ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior case mean')
+        ax.axvline(decoded_perm[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='red', linestyle='--', label='Posterior case mean')
+
+        ax.legend()
+        plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_prior_{prior_model}_posterior.png'))
+        plt.show()
+        plt.close()
+
 
 
 
