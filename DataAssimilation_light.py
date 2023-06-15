@@ -310,8 +310,8 @@ for step in range(num_steps):
         ax.hist(initial_map.flatten(), bins=bin_number, alpha=0.5, label='Prior', color='blue')
         ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior', color='blue')
         #compute the mean of each
-        ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior mean')
-        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior mean')
+        ax.axvline(initial_map.flatten().mean(), color='green', linestyle='--', label='Prior mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_prior_{prior_model}_posterior.png'))
