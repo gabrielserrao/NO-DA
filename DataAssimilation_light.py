@@ -266,18 +266,25 @@ for step in range(num_steps):
         #Separete figure to show difference between true and prior permeability Abssolute and relative
         fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(12, 5))
         #include the difference between the true and the prior
-        ax[0].imshow(np.abs(true_map.detach().numpy() - initial_map), cmap='jet')
+        im1 = ax[0].imshow(np.abs(true_map.detach().numpy() - initial_map), cmap='jet')
         ax[0].set_title(f'Difference - true and prior')
         ax[0].axis('off')
         #include the difference between the true and the posterior
-        ax[1].imshow(np.abs(true_map.detach().numpy() - decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS]), cmap='jet')
+        im2 = ax[1].imshow(np.abs(true_map.detach().numpy() - decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS]), cmap='jet')
         ax[1].set_title(f'Difference - true and posterior')
         ax[1].axis('off')
         #compute relavite difference between posterior and prior
-        ax[2].imshow(np.abs(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS] - initial_map)/initial_map, cmap='jet')
-        ax[2].set_title(f'Relative Difference - posterior and prior')
-        ax[2].axis('off')
+        im3= ax[2].imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS] - initial_map, cmap='RdBu_r')
+        ax[2].set_title(f'Difference - posterior and prior')
+        ax[2].axis('off') 
+        #include colorbar for the last one make sure it has the same high of the last subplot
+        # Create an axes on the right side of ax. The width of cax will be 5%
+        # of ax and the padding between cax and ax will be fixed at 0.05 inch.
+        # Add colorbar
+        fig.colorbar(im3, ax=ax[2])  
         plt.savefig(os.path.join(results_folder, f'Permeability_difference_{step}.png'))
+        plt.show()
+        plt.close()
 
         bin_number = 25
 
