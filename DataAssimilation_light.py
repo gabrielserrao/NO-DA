@@ -245,7 +245,7 @@ for step in range(num_steps):
         cbr = plt.colorbar(ax.imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet'))
         #title of the colorbar - Permeability (mD)
         cbr.set_label('Permeability (mD)', rotation=270, labelpad=20)
-        plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
+        plt.savefig(os.path.join(results_folder, f'Permeability_posterior_{step}.png'))
         plt.show()
         plt.close()
 
