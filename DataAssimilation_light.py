@@ -151,7 +151,7 @@ true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAME
 
 #prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = a_normalizer.decode(test_a)[prior_model, :, :, :, :].unsqueeze(0)
-prior_model_inputs_PARAM_leaf = torch.tensor(torch.log(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS]), requires_grad=True).to(device)
+prior_model_inputs_PARAM_leaf = torch.tensor(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS], requires_grad=True).to(device)
 
 
 predicted = pred_un.detach().numpy()[prior_model, :, x, y, 0]
@@ -198,14 +198,11 @@ for step in range(num_steps):
 
     t1 = default_timer()
     optimizer.zero_grad()
-
     
-    prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS].unsqueeze(-1).copy_(torch.exp(prior_model_inputs_PARAM_leaf).unsqueeze(-1))
+    prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS].unsqueeze(-1).copy_(prior_model_inputs_PARAM_leaf.unsqueeze(-1))
 
     pred = model(a_normalizer.encode(prior_model_inputs))
     pred_un = y_normalizer.decode(pred)[0, :, x, y, 0]
-
-
 
     if regularization_weight > 0.0:
         loss = F.mse_loss(observed, pred_un, reduction='mean') + regularization_weight * torch.norm(
@@ -217,9 +214,10 @@ for step in range(num_steps):
     #loss.backward()
     optimizer.step()
 
+    prior_model_inputs_PARAM_leaf.data.clamp_(min=0)
+
     predicted_values.append(pred_un.detach().numpy())
     decoded_inputs= prior_model_inputs.detach().numpy()
-
 
         
     if step == 0: #create the prior case
@@ -237,6 +235,22 @@ for step in range(num_steps):
 
 
     if step % 10 == 0:
+        #plot the permeability field for the posterior for the step
+
+        fig, ax = plt.subplots(figsize=(12, 5))
+        ax.imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet')
+        ax.set_title(f'Posterior permeability - step {step}')
+        ax.axis('off')
+        #include colorbar for the last one make sure it has the same high of the last subplot
+        cbr = plt.colorbar(ax.imshow(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS], cmap='jet'))
+        #title of the colorbar - Permeability (mD)
+        cbr.set_label('Permeability (mD)', rotation=270, labelpad=20)
+        plt.savefig(os.path.join(results_folder, f'Permeability_{step}.png'))
+        plt.show()
+        plt.close()
+
+
+
         fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(12, 5)) 
         #true               
         ax[0].imshow(true_map.detach().numpy(), cmap='jet')
