@@ -298,7 +298,7 @@ for step in range(num_steps):
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference mean')
         ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior mean')
         #include prior perm mean
-        ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior mean')
+        ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_reference_{reference_model}_prior_{prior_model}.png'))
@@ -312,6 +312,8 @@ for step in range(num_steps):
         #compute the mean of each
         ax.axvline(initial_map.flatten().mean(), color='blue', linestyle='--', label='Prior mean')
         ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior mean')
+       
+        ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference mean')
 
         ax.legend()
         plt.savefig(os.path.join(results_folder, f'Permeability_histogram_{step}_prior_{prior_model}_posterior.png'))
