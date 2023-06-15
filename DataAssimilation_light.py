@@ -42,7 +42,7 @@ y = 3
 reference_model = 193
 prior_model = 27
 # Define the number of optimization steps
-num_steps = 300
+num_steps = 1000
 regularization_weight = 0.0
 learning_rate = 0.01  # ADAM learning rate
 UNKNOWN_PARAMETERS = 1  # 1 - PERMEABILITY, 2 - POROSITY
