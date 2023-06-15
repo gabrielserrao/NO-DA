@@ -271,7 +271,7 @@ for step in range(num_steps):
         ax.hist(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten(), bins=bin_number, alpha=0.5, label='Posterior case', color='green')
         #compute the mean of each
         ax.axvline(true_map.detach().numpy().flatten().mean(), color='red', linestyle='--', label='Reference case mean')
-        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='blue', linestyle='--', label='Posterior case mean')
+        ax.axvline(decoded_inputs[0, -1, :, :, UNKNOWN_PARAMETERS].flatten().mean(), color='green', linestyle='--', label='Posterior case mean')
         #include prior perm mean
         ax.axvline(initial_map.flatten().mean(), color='black', linestyle='--', label='Prior case mean')
 
