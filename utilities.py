@@ -12,6 +12,13 @@ import h5py
 import operator
 from functools import reduce
 from functools import partial
+import psutil
+
+def print_memory_usage():
+    process = psutil.Process(os.getpid())
+    print(f'Memory usage: {process.memory_info().rss / 1024 ** 3} GB')
+
+# Call this function at various points in your code to print memory usage
 
 #################################################
 #
