@@ -3,39 +3,23 @@
 Adapted from Zongyi Li TODO: include referene in the README
 This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1D temporal equation directly as a 3D problem
 """
-#print version of python and available packages
-import sys
-import os
+
 import torch.nn.functional as F
 from utilities import *
 from timeit import default_timer
 import matplotlib.pyplot as plt
 import numpy as np
-import resource
 from model_fourier_3d import *
-
-#print torch version
-import torch
-print(torch.__version__)
-print(f"GPUs:{torch.cuda.device_count()}")
-
-torch.manual_seed(0)
-np.random.seed(0)
-
-
 ################################################################
 # configs-1
 ################################################################
-#create a variable called resolution 
-resolution = 32
-
-folder = "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['Pressure'] 
+output_vars = ['CO_2'] 
 
 
 
-num_files= 1000
+num_files= 100
 traintest_split = 0.8
 
 batch_size = 1
@@ -44,15 +28,18 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 100
+epochs = 10 
 
 
 iterations = epochs*(ntrain//batch_size)
 modes = 12
-width = 64 
+width = 32 
 
+################################################################
+# configs-2
+################################################################
 # Prepare the path
-path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
+path = 'fourier_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
 
 # Include in the path the input and output variables
 path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
@@ -60,7 +47,7 @@ path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
 # Create paths for log, model, and images
 path_log = os.path.join('runs', path, 'log')
 # Modify here: 'model.pt' will be the filename, not a subdirectory
-path_model = os.path.join('runs', path, 'model.pt') 
+path_model = os.path.join('runs', path, f'{path}_model.pt') 
 path_image = os.path.join('runs', path, 'images')
 
 # Create directories
@@ -78,77 +65,72 @@ S = 32
 #T_in = 61
 T = 61
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-#device = 'cpu'
-print('Using ' + device + ' for training')
-
-################################################################
-# load data
-################################################################
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 
 ################################################################
 # load data
 ################################################################
 runtime = np.zeros(2, )
 t1 = default_timer()
-
-# Create instance of ReadXarrayDatasetNorm class for training data
-dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files)
-
-train_size = int(traintest_split * len(dataset))
-test_size = len(dataset) - train_size
-
-train_dataset = torch.utils.data.Subset(dataset, range(0, train_size))
-test_dataset = torch.utils.data.Subset(dataset, range(train_size, train_size + test_size))
+# Create instance of ReadXarrayDataset class for training data
+dataset = ReadXarray(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, traintest_split = traintest_split)
 
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-t2 = default_timer()
+# Get input and output data tensors
+train_a = dataset.train_data_input #800, 32, 32, 61, 6 
+train_u = dataset.train_data_output #800, 32, 32, 61, 1
 
-# We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
-# We also can't directly print the shape of the data because it's not all loaded into memory.
+test_a = dataset.test_data_input #200, 32, 32, 61, 6
+test_u = dataset.test_data_output #200, 32, 32, 61, 1
 
+# Move data tensors to GPU if available
+train_a = train_a.to(device)
+train_u = train_u.to(device)
 
+test_a = test_a.to(device)
+test_u = test_u.to(device)
 
 # Normalize input_data and output_data
-# Create normalizers for training data
-input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
-output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
+a_normalizer = UnitGaussianNormalizer(train_a)
+#TODO: save a torch tensor with the mean and std of the training data
 
-# Create normalizers for test data
+train_a= a_normalizer.encode(train_a)
+test_a = a_normalizer.encode(test_a)
 
-train_input_normalizer = input_normalizer.cuda(device)
-train_output_normalizer = output_normalizer.cuda(device)
+y_normalizer = UnitGaussianNormalizer(train_u)
+train_u = y_normalizer.encode(train_u)
+test_u = y_normalizer.encode(test_u)
 
-test_input_normalizer = input_normalizer.cuda(device)
-test_output_normalizer = output_normalizer.cuda(device)
+#save normalizers on path_model with the name of the path
+torch.save(a_normalizer.mean, os.path.join(os.path.dirname(path_model), f'{path}_a_normalizer_mean.pt'))
+torch.save(a_normalizer.std, os.path.join(os.path.dirname(path_model), f'{path}_a_normalizer_std.pt'))
 
-#save the normalizers mean and std on pytorch files
-torch.save(train_input_normalizer.mean, os.path.join(path_model, 'mean_input.pt'))
-torch.save(train_input_normalizer.std, os.path.join(path_model, 'std_input.pt'))
-torch.save(train_output_normalizer.mean, os.path.join(path_model, 'mean_output.pt'))
-torch.save(train_output_normalizer.std, os.path.join(path_model, 'std_output.pt'))
+torch.save(y_normalizer.mean, os.path.join(os.path.dirname(path_model), f'{path}_y_normalizer_mean.pt'))
+torch.save(y_normalizer.std, os.path.join(os.path.dirname(path_model), f'{path}_y_normalizer_std.pt'))
 
 
-print(f"Memory usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}")
+t2 = default_timer()
+#print shapes of normalized input and output data tensors
+print("Train input data shape:", train_a.shape)
+print("Train output data shape:", train_u.shape)
+print("Test input data shape:", test_a.shape)
+print("Test output data shape:", test_u.shape)
 print('preprocessing finished, time used:', t2-t1)
 
-
-
+train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(train_a, train_u), batch_size=batch_size, shuffle=True)
+test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=batch_size, shuffle=False)
 #%%
 ################################################################
 # training and evaluation
 ################################################################
-model = FNO3d(modes, modes, modes, width)
-
-
-model.to(device)
+model = FNO3d(modes, modes, modes, width).to(device) #TODO include .cuda()
+print(count_params(model))
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
 
 myloss = LpLoss(size_average=False)
+y_normalizer #TODO include .cuda()
 for ep in range(epochs):
     print(f'epoch {ep} of {epochs}')
     model.train()
@@ -156,12 +138,8 @@ for ep in range(epochs):
     train_mse = 0
     train_l2 = 0
     for x, y in train_loader:
-        
-        x = x.to(device)
-        y = y.to(device)
-        
-        x = train_input_normalizer.encode(x)
-        y = train_output_normalizer.encode(y) 
+        x.to(device) 
+        y.to(device) 
 
         optimizer.zero_grad()
         out = model(x) #.view(batch_size, S, S, T)
@@ -169,8 +147,8 @@ for ep in range(epochs):
         mse = F.mse_loss(out, y, reduction='mean')
         # mse.backward()
 
-        y = train_output_normalizer.decode(y)
-        out = train_output_normalizer.decode(out)
+        y = y_normalizer.decode(y)
+        out = y_normalizer.decode(out)
         l2 = myloss(out.view(batch_size, -1), y.view(batch_size, -1))
         l2.backward()
 
@@ -184,36 +162,31 @@ for ep in range(epochs):
     test_mse= 0.0
     with torch.no_grad():
         for index, (x, y) in enumerate(test_loader):
-            
-            x = x.to(device)
-            y = y.to(device)
-
-            x = test_input_normalizer.encode(x)
-            y = test_output_normalizer.encode(y)
-            
+            x.to(device)
+            y.to(device)
 
             out = model(x) #.view(batch_size, S, S, T)
             mse = F.mse_loss(out, y, reduction='mean')
 
-            y = test_output_normalizer.decode(y)
-            out = test_output_normalizer.decode(out)
+            y = y_normalizer.decode(y)
+            out = y_normalizer.decode(out)
 
             test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()            
             test_mse += mse.item()
 
             if index == 0:
-                test_y_shape = (1, 61, resolution, resolution, 1)
-                predicted_y_shape = (1, 61, resolution, resolution, 1)
-                test_y = y[0].detach().view(test_y_shape).cpu().numpy()
-                predicted_y = out[0].detach().view(predicted_y_shape).cpu().numpy()
+                test_y_shape = (1, 61, 32, 32, 1)
+                predicted_y_shape = (1, 61, 32, 32, 1)
+                test_y = y[0].view(test_y_shape).cpu().numpy()
+                predicted_y = out[0].view(predicted_y_shape).cpu().numpy()
                 fig, ax = plt.subplots(nrows=1, ncols=3)
                 ax[0].imshow(test_y[0, -1, :, :, 0].T)
                 ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
                 ax[2].imshow((test_y[0, 0, :, :, 0]-predicted_y[0, 0, :, :, 0]).T)
                 plt.savefig(path_image + '_ep' + str(ep) + '.png')
                 plt.close()
-                #detached_out = out.detach().cpu().numpy()
        
+
     
 
     train_mse /= len(train_loader)
@@ -235,3 +208,27 @@ for ep in range(epochs):
         torch.save(model, path_model)
     
 torch.save(model, path_model)
+#%%
+pred = torch.zeros(test_u.shape)
+index = 0
+test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
+with torch.no_grad():
+    for x, y in test_loader:
+        test_l2 = 0
+        x.to(device) 
+        y.to(device) 
+
+        out = model(x)
+        out = y_normalizer.decode(out)
+        y = y_normalizer.decode(y)
+        pred[index] = out
+
+        test_l2 += myloss(out.view(1, -1), y.view(1, -1)).item()
+        print(index, test_l2)
+        index = index + 1
+
+scipy.io.savemat(os.path.join('runs', path, 'log', path+'.mat'), mdict={'pred': pred.cpu().numpy()})
+
+
+###
+
