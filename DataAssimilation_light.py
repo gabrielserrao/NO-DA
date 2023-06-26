@@ -38,7 +38,7 @@ plot_gifs = True
 results_folder = '/scratch/smrserraoseabr/Projects/NO-DA/runs/TESTES'
 # data assimilation parameters
 x = 28
-y = 3
+y = 16
 reference_model = 193
 prior_model = 27
 # Define the number of optimization steps
@@ -148,7 +148,7 @@ loss_values = []
 
 observed = true[reference_model, :, x, y, 0]
 true_map = a_normalizer.decode(test_a)[reference_model, -1, :, :, UNKNOWN_PARAMETERS]
-
+#%%
 #prior_model_inputs = test_a[prior_model, :, :, :, :]
 prior_model_inputs = a_normalizer.decode(test_a)[prior_model, :, :, :, :].unsqueeze(0)
 prior_model_inputs_PARAM_leaf = torch.tensor(prior_model_inputs[:, :, :, :, UNKNOWN_PARAMETERS], requires_grad=True).to(device)
@@ -233,8 +233,12 @@ for step in range(num_steps):
     with open(loss_log, 'a') as f:
         f.write(f'epoch {step}: t={t2 - t1:.3f}, mse={loss.item():.3e}\n')
 
+    #save model inputs of posterior case and also the predicted values and posterior permeability in a single pickle file
+    #fisrt concatenate the predicted values and the parameter values and decoded_inputs
+  
 
-    if step % 10 == 0:
+    
+    if step % 100 == 0:
         #plot the permeability field for the posterior for the step
 
         fig, ax = plt.subplots(figsize=(12, 5))
@@ -336,7 +340,6 @@ for step in range(num_steps):
 
 
 
-
         fig, main_ax = plt.subplots()
 
         main_ax.plot(time, observed, color='red', label='Reference case - true')
@@ -349,22 +352,27 @@ for step in range(num_steps):
         main_ax.set_ylabel(variable)
         main_ax.set_title(f'Montintoring {variable} at x={x} and y={y}')
 
-        plt.savefig(os.path.join(results_folder, f'Initial_overview_prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_step{step}_used_loss.png'))
+        plt.savefig(os.path.join(results_folder, f'Posterior_overview_prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_step{step}_used_loss.png'))
         plt.show()
         plt.savefig(os.path.join(image_folder, f'Optimim_{step}.png'))
         plt.close()
 
+        #SAVE FIELS FOR DARTS RUN CHECK
+        #PERMEABILITY, POROSITY AND GAS RATES IN A SINGLE PICKLE FILE 
+
+
+
         with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_predicted_values_step{step}.pkl'), 'wb') as f:
             pickle.dump(predicted_values, f)
-        with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_permeability_values_step{step}.pkl'), 'wb') as f:
-            pickle.dump(parameter_values, f)
+        with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_parameters_values_step{step}.pkl'), 'wb') as f:
+            pickle.dump(decoded_inputs, f)
         with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step{step}.pkl'), 'wb') as f:
             pickle.dump(loss_values, f)
 #%%
 with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_predicted_values_step{step}.pkl'), 'wb') as f:
     pickle.dump(predicted_values, f)
-with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_permeability_values_step{step}.pkl'), 'wb') as f:
-    pickle.dump(parameter_values, f)
+with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_parameters_values_step{step}.pkl'), 'wb') as f:
+    pickle.dump(decoded_inputs, f)
 with open(os.path.join(results_folder, f'prior_{prior_model}_reference_{reference_model}_x{x}_y{y}_posterior_loss_values_step{step}.pkl'), 'wb') as f:
     pickle.dump(loss_values, f)
 
