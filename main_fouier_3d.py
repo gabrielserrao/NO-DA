@@ -17,17 +17,18 @@ import torch
 print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
 #%%
-torch.manual_seed(0)
-np.random.seed(0)
 ################################################################
 # configs-1
 ################################################################
+torch.manual_seed(0)
+np.random.seed(0)
+
 folder = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['Pressure'] 
-num_files= 10
+num_files= 1000
 traintest_split = 0.8
-batch_size = 1
+batch_size = 10
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
@@ -37,8 +38,8 @@ epochs = 2
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 6
-width = 12
+modes = 12
+width = 128
 
 # Prepare the path
 path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
@@ -61,7 +62,7 @@ os.makedirs(path_image, exist_ok=True)
 # Create paths for train error and test error files
 path_train_err = os.path.join(path_log, 'train.txt')
 path_test_err = os.path.join(path_log, 'test.txt')
-#%%
+
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -151,7 +152,8 @@ for ep in range(epochs):
         optimizer.step()
         scheduler.step()
         train_mse += mse.item()
-        train_l2 += l2.item()        
+        train_l2 += l2.item() 
+           
         print_memory_usage()
 
     model.eval()
