@@ -20,7 +20,7 @@ from functools import partial
 #################################################
 
 class ReadXarrayDataset(Dataset):
-    def __init__(self, folder, input_vars, output_vars, num_files=None):
+    def __init__(self, folder, input_vars, output_vars, num_files=None, wells_positions=False):
         self.folder = folder        
         self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
         self.input_vars = input_vars.copy()
@@ -28,12 +28,10 @@ class ReadXarrayDataset(Dataset):
         self.input_vars.append('y_encoding')
         self.input_vars.append('time_encoding')
         self.output_vars = output_vars.copy()
-
+        self.wells_positions = wells_positions
         # self.input_normalizers = []
         # self.output_normalizers = []
         # self.file_stats = {}
-
-
 
     def __len__(self):
         return len(self.file_list)
@@ -61,17 +59,22 @@ class ReadXarrayDataset(Dataset):
                 scalar_matrix = scalar_matrix.unsqueeze(0).expand(data.time.size, -1, -1)
                 input_data.append(scalar_matrix)
             elif 'time' in data[var].dims:
+                if self.wells_positions:
+                    variable_matrix = torch.zeros((data.time.size, data.X.size, data.Y.size), dtype=torch.float32)
+                    for origin in data.origin.values:
+                        i = data.sel(origin=origin)['i'].values.item()
+                        j = data.sel(origin=origin)['j'].values.item()
+                        variable_matrix[:, i, j] = torch.tensor(data.sel(origin=origin)[var].values, dtype=torch.float32) 
+                input_data.append(variable_matrix)
+            else:
                 scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) 
                 scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
                 input_data.append(scalar_matrix)
-                
-        #print(len(input_data))
+
 
         output_data = []
         for var in self.output_vars:
            output_data.append(torch.tensor(data[var].values, dtype=torch.float32))
-
-        #print(output_data)
 
 
         input_data = torch.stack(input_data, dim=-1)

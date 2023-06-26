@@ -76,7 +76,7 @@ runtime = np.zeros(2, )
 t1 = default_timer()
 
 # Create instance of ReadXarrayDatasetNorm class for training data
-dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files)
+dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, wells_positions=False)
 
 train_size = int(traintest_split * len(dataset))
 test_size = len(dataset) - train_size
