@@ -107,7 +107,7 @@ torch.save(output_normalizer.mean, os.path.join('runs', path, 'normalizer_mean_o
 torch.save(output_normalizer.std, os.path.join('runs', path, 'normalizer_std_output.pt'))
 
 
-print(f"Memory usage: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}")
+print_memory_usage()
 print('preprocessing finished, time used:', t2-t1)
 
 
@@ -117,6 +117,7 @@ print('preprocessing finished, time used:', t2-t1)
 # training and evaluation
 ################################################################
 model = FNO3d(modes, modes, modes, width)
+print_memory_usage()
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
@@ -150,7 +151,8 @@ for ep in range(epochs):
         optimizer.step()
         scheduler.step()
         train_mse += mse.item()
-        train_l2 += l2.item()
+        train_l2 += l2.item()        
+        print_memory_usage()
 
     model.eval()
     test_l2 = 0.0
