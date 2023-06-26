@@ -5,13 +5,7 @@ This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1
 """
 #print version of python and available packages
 import sys
-print(sys.version)
-#print python version
-
 import os
-
-
-
 import torch.nn.functional as F
 from utilities import *
 from timeit import default_timer
@@ -23,7 +17,6 @@ from model_fourier_3d import *
 #print torch version
 import torch
 print(torch.__version__)
-
 print(f"GPUs:{torch.cuda.device_count()}")
 
 torch.manual_seed(0)
@@ -42,7 +35,6 @@ output_vars = ['Pressure']
 
 
 
-
 num_files= 1000
 traintest_split = 0.8
 
@@ -52,7 +44,7 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 200
+epochs = 100
 
 
 iterations = epochs*(ntrain//batch_size)
@@ -60,7 +52,7 @@ modes = 12
 width = 64 
 
 # Prepare the path
-path = 'ns_fourier_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
+path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
 
 # Include in the path the input and output variables
 path += '_INPUT_' + '_'.join(input_vars) + '_OUTPUT_' + '_'.join(output_vars)
@@ -222,8 +214,6 @@ for ep in range(epochs):
                 plt.close()
                 #detached_out = out.detach().cpu().numpy()
        
-#which is the correct command to submit sbatch?
-#sbatch -p gpu --gres=gpu:1 --mem=10000 --time=0-00:30:00 --wrap="python fouier_3d_GPU_enabled.py"
     
 
     train_mse /= len(train_loader)
@@ -245,27 +235,3 @@ for ep in range(epochs):
         torch.save(model, path_model)
     
 torch.save(model, path_model)
-#%%
-#pred = torch.zeros(test_u.shape)
-# index = 0
-# #test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(test_a, test_u), batch_size=1, shuffle=False)
-# with torch.no_grad():
-#     for x, y in test_loader:
-#         test_l2 = 0
-#         x.to(device) 
-#         y.to(device) 
-
-#         out = model(x)
-#         out = test_output_normalizer.decode(out)
-#         y = test_output_normalizer.decode(y)
-#         #pred[index] = out
-
-#         test_l2 += myloss(out.view(1, -1), y.view(1, -1)).item()
-#         print(index, test_l2)
-#         index = index + 1
-#         #plot 
-
-#scipy.io.savemat(os.path.join('runs', path, 'log', path+'.mat'), mdict={'pred': pred.cpu().numpy()})
-
-
-###
