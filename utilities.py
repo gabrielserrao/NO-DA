@@ -16,7 +16,7 @@ import psutil
 
 def print_memory_usage():
     process = psutil.Process(os.getpid())
-    print(f'Memory usage: {process.memory_info().rss / 1024 ** 3} GB')
+    print(f'Memory usage: {round(process.memory_info().rss / 1024 ** 3)} GB')
 
 # Call this function at various points in your code to print memory usage
 
@@ -72,11 +72,11 @@ class ReadXarrayDataset(Dataset):
                         i = data.sel(origin=origin)['i'].values.item()
                         j = data.sel(origin=origin)['j'].values.item()
                         variable_matrix[:, i, j] = torch.tensor(data.sel(origin=origin)[var].values, dtype=torch.float32) 
-                input_data.append(variable_matrix)
-            else:
-                scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) 
-                scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
-                input_data.append(scalar_matrix)
+                        input_data.append(variable_matrix)              
+                else:
+                    scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) 
+                    scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
+                    input_data.append(scalar_matrix)
 
 
         output_data = []
