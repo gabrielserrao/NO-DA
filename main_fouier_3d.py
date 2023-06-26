@@ -81,28 +81,24 @@ dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=ou
 train_size = int(traintest_split * len(dataset))
 test_size = len(dataset) - train_size
 
-train_dataset = torch.utils.data.Subset(dataset, range(0, train_size))
-test_dataset = torch.utils.data.Subset(dataset, range(train_size, train_size + test_size))
 
+train_loader = DataLoader(torch.utils.data.Subset(dataset, range(0, train_size)),
+                           batch_size=batch_size,
+                             shuffle=False)
+test_loader = DataLoader(torch.utils.data.Subset(dataset, range(train_size, train_size + test_size)), 
+                         batch_size=batch_size, 
+                         shuffle=False)
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 t2 = default_timer()
 
 # We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
 
-# Normalize input_data and output_data
-# Create normalizers for training data
 input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
 output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
 
-# Create normalizers for test data
-
 input_normalizer = input_normalizer.cuda(device)
 output_normalizer = output_normalizer.cuda(device)
 
-input_normalizer = input_normalizer.cuda(device)
-output_normalizer = output_normalizer.cuda(device)
 
 #save the normalizers mean and std on pytorch files
 torch.save(input_normalizer.mean,os.path.join('runs', path, 'normalizer_mean_input.pt'))
