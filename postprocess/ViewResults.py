@@ -1,8 +1,11 @@
 # %%
+import sys
+sys.path.append("..")
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
 import numpy as np
+#%%
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 from utilities import *
@@ -15,8 +18,8 @@ from model_fourier_3d import *
 
 
 # DATASET
-data_folder = "/scratch/smrserraoseabr/Projects/FluvialCO2/results32/"
-num_files = 1000
+data_folder = "/nethome/atena_projetos/bgy3/AI_PhD/NO-DA/dataset/mixedcontext32x32"
+num_files = 100
 traintest_split = 0.8
 num_samples = 10  # Number of samples to see results
 #CASE CONFIGURATION
