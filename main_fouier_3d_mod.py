@@ -9,7 +9,7 @@ import os
 import torch.nn.functional as F
 from utilities import *
 from timeit import default_timer
-import matplotlib.pyplot as plt
+
 import numpy as np
 import resource
 from model_fourier_3d import *
@@ -23,7 +23,7 @@ print(f"GPUs:{torch.cuda.device_count()}")
 torch.manual_seed(0)
 np.random.seed(0)
 
-folder = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+folder = "/nethome/atena_projetos/bgy3/AI_PhD/NO-DA/dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['Pressure'] 
 num_files= 1000
@@ -177,20 +177,7 @@ for ep in range(epochs):
 
             test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()            
             test_mse += mse.item()
-
-            if index == 0:
-                test_y_shape = (1, 61, 32, 32, 1)
-                predicted_y_shape = (1, 61, 32, 32, 1)
-                test_y = y[0].detach().view(test_y_shape).cpu().numpy()
-                predicted_y = out[0].detach().view(predicted_y_shape).cpu().numpy()
-                fig, ax = plt.subplots(nrows=1, ncols=3)
-                ax[0].imshow(test_y[0, -1, :, :, 0].T)
-                ax[1].imshow(predicted_y[0, -1, :, :, 0].T)
-                ax[2].imshow((test_y[0, 0, :, :, 0]-predicted_y[0, 0, :, :, 0]).T)
-                plt.savefig(os.path.join(path_image, 'test_ep' + str(ep) + '.png'))
-                plt.close()
-                #detached_out = out.detach().cpu().numpy()
-       
+      
     
 
     train_mse /= len(train_loader)
