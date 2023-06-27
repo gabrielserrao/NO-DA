@@ -26,4 +26,4 @@ source /nethome/drp/microtom/init.sh
 
  
 
-python main_fouier_3d.py
+python3 main_fouier_3d.py

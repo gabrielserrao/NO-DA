@@ -7,7 +7,7 @@ This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1
 import torch.nn.functional as F
 from utilities import *
 from timeit import default_timer
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 
 torch.manual_seed(0)
