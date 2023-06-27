@@ -28,7 +28,7 @@ input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_
 output_vars = ['Pressure'] 
 num_files= 1000
 traintest_split = 0.8
-batch_size = 10
+batch_size = 1
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
@@ -38,7 +38,7 @@ epochs = 200
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 12
+modes = 6
 width = 128
 
 # Prepare the path
