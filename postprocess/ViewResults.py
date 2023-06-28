@@ -37,17 +37,17 @@ MODES = 18
 WIDTH = 128
 
 #List of samples to plot:
-BATCH_TO_PLOT = [1]
+BATCH_TO_PLOT = [0]
 SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
 EVALUATE_METRICS = True
-plot_model_eval = False
-plot_comparison = False
-plot_lines = False
-plot_gifs =False
+plot_model_eval = True
+plot_comparison = True
+plot_lines = True
+plot_gifs =True
 ###############################################
 variable = OUTPUT_VARS[0]
 ntrain = NUM_FILES * TRAINTEST_SPLIT
@@ -183,6 +183,14 @@ if plot_model_eval:
     ax1.plot(epoch_train, mse_train, 'g-', label='Train MSE')
     ax1.plot(epoch_test, mse_test, 'g-', label='Test MSE')
 
+    # Set labels and title
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Value')
+    ax1.set_title('Comparison of Train and Test MSE values')
+    ax1.legend()
+    plt.savefig(os.path.join(path_runs, f'{path_runs}_model_eval_MSE.png'))
+
+
 
 
 #%%
@@ -226,7 +234,7 @@ if EVALUATE_METRICS:
                 test_y = true_y[index,...].detach().cpu()
                 predicted_y = out[index,...].detach().cpu()
                  # Compute and store the Mean Squared Error
-                mse = metric(predicted_y, test_y)
+                mse = metric(output_normalizer.encode(predicted_y), output_normalizer.encode(test_y))
                 print(f"Sample {sample} - MSE: {mse.item()}")
                 mse_scores.append((sample, mse.item()))  # .item() is used to get a Python number from a tensor containing a single value
                 #compute the std of the the permeability of the sample
