@@ -189,6 +189,7 @@ if plot_model_eval:
     ax1.legend()
     plt.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
     print('Model evaluation plots saved')
+    plt.close()
 #%%
 ###############################################
 #GENERATE IMAGES AND PLOTS FOR EACH MODEL
@@ -248,7 +249,8 @@ for batch_idx, (x, y) in enumerate(test_loader):
                     fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
                     plt.tight_layout()
                     plt.savefig(os.path.join(image_folder, f"comparison_{sample+1}.png"))
-                    print(f"Comparison_{sample+1}.png saved") 
+                    print(f"Comparison_{sample+1}.png saved")
+                    plt.close() 
             
                     if plot_lines:
                         resolution  = test_y.shape[1]
@@ -281,7 +283,7 @@ for batch_idx, (x, y) in enumerate(test_loader):
 
                                 fig.savefig(os.path.join(image_folder, f'Sample_{sample+1}_comparison_point_x{x}_y{y}.png'), dpi=300)
                                 print(f'Sample_{sample+1}_comparison_point_x{x}_y{y}.png saved')
-                               
+                                plt.close()
 
                     if plot_gifs:
                         gif_paths = []
