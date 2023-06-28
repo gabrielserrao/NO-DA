@@ -13,20 +13,29 @@ import imageio
 from io import BytesIO
 from IPython.display import Image as DisplayImage
 from model_fourier_3d import *
+print(torch.__version__)
+print(f"GPUs:{torch.cuda.device_count()}")
+import os
+print(os.getcwd())
 
 # %%
-
-
+###############################################
+#INTIAL CONFIGS
 # DATASET
-data_folder = "/nethome/atena_projetos/bgy3/AI_PhD/NO-DA/dataset/mixedcontext32x32"
-num_files = 100
-traintest_split = 0.8
-num_samples = 10  # Number of samples to see results
-#CASE CONFIGURATION
-input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-variable = 'Pressure'
-output_vars = [variable]
-case_name = 'VINI_ns_fourier_3d_N800.0_ep500_m12_w128_b61_padding4' + '_' + variable
+FOLDER = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
+OUTPUT_VARS = ['CO_2'] 
+
+#CONFIGS OF THE MODEL TO GENERATE RESULTS
+BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
+
+NUM_FILES= 1000
+TRAINTEST_SPLIT = 0.8
+BATCH_SIZE = 10
+EPOCHS = 200
+MODES = 18
+WIDTH = 128
+
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
@@ -34,16 +43,18 @@ plot_model_eval =True
 plot_comparison = True
 plot_lines = True
 plot_gifs =True
-
-
 ###############################################
-
-
-
-path_runs = os.path.join('runs', case_name)
-path_model = os.path.join(path_runs, 'model', f'{case_name}_model.pt')
-path_normalizer = os.path.join(path_runs, 'model')
+variable = OUTPUT_VARS[0]
+ntrain = NUM_FILES * TRAINTEST_SPLIT
+ntest = NUM_FILES - ntrain
+path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, EPOCHS, MODES, WIDTH, BATCH_SIZE)
+path += '_INPUT_' + '_'.join(INPUT_VARS) + '_OUTPUT_' + '_'.join(OUTPUT_VARS)
+path_runs = os.path.join(BASE_PATH, path)
+path_model = os.path.join(path_runs, f'{path}_model.pt')
+path_normalizer = path_runs
 image_folder = os.path.join(path_runs, 'images')
+log_folder = os.path.join(path_runs, 'log')
+
 if not os.path.exists(image_folder):
     os.makedirs(image_folder)
 
@@ -66,67 +77,53 @@ elif variable == 'Pressure':
     colorbar_vmin, colorbar_vmax = 200.0, 600.0 # Define your min and max here
   # Change this to the index you want
       
+###############################################
+#LOAD DATA
 
+# Create instance of ReadXarrayDatasetNorm class for training data
+dataset = ReadXarrayDataset(folder=FOLDER, input_vars=INPUT_VARS, output_vars=OUTPUT_VARS, num_files = NUM_FILES, wells_positions=False)
+
+train_size = int(TRAINTEST_SPLIT * len(dataset))
+test_size = len(dataset) - train_size
+
+
+train_loader = DataLoader(torch.utils.data.Subset(dataset, range(0, train_size)),
+                           batch_size=BATCH_SIZE,
+                             shuffle=False)
+test_loader = DataLoader(torch.utils.data.Subset(dataset, range(train_size, train_size + test_size)), 
+                         batch_size=BATCH_SIZE, 
+                         shuffle=False)
+# We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
+
+input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
+output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
 
 # %%
 #LOAD NORMALIZATION PARAMETERS
-dataset = ReadXarray(folder=data_folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, traintest_split = traintest_split)
-
-# Get input and output data tensors
-train_a = dataset.train_data_input
-train_u = dataset.train_data_output
-
-test_a = dataset.test_data_input
-test_u = dataset.test_data_output
-
-print(f'Input train data shape: {train_a.shape}')
-print(f'Output train data shape: {train_u.shape}')
-
-print(f'Input test data shape: {test_a.shape}')
-print(f'Output test data shape: {test_u.shape}')
-
-
-# Move data tensors to GPU if available
-train_a = train_a.to(device)
-train_u = train_u.to(device)
-
-test_a = test_a.to(device)
-test_u = test_u.to(device)
 
 # Normalize input_data and output_data
 #check if normalizer exists and load it, otherwise raise a warning and create a new one
-if os.path.exists(os.path.join((path_normalizer), f'{case_name}_a_normalizer_mean.pt')):
-    a_normalizer_mean = torch.load(os.path.join((path_normalizer), f'{case_name}_a_normalizer_mean.pt'))
-    a_normalizer_std = torch.load(os.path.join((path_normalizer), f'{case_name}_a_normalizer_std.pt'))
-    y_normalizer_mean = torch.load(os.path.join((path_normalizer), f'{case_name}_y_normalizer_mean.pt'))
-    y_normalizer_std = torch.load(os.path.join((path_normalizer), f'{case_name}_y_normalizer_std.pt'))
+if os.path.exists(os.path.join(path_runs,'normalizer_mean_input.pt')):
+    input_normalizer_mean = torch.load(os.path.join(path_runs,'normalizer_mean_input.pt'))
+    input_normalizer_std = torch.load(os.path.join(path_runs,'normalizer_std_input.pt'))
+    output_normalizer_mean = torch.load(os.path.join(path_runs,'normalizer_mean_output.pt'))
+    output_normalizer_std = torch.load(os.path.join(path_runs,'normalizer_std_output.pt'))
     print('Normalizer loaded')
-    a_normalizer = UnitGaussianNormalizer(train_a, mean=a_normalizer_mean, std=a_normalizer_std)
-    y_normalizer = UnitGaussianNormalizer(train_u, mean=y_normalizer_mean, std=y_normalizer_std)
+    input_normalizer = PointGaussianNormalizer(train_loader, mean = input_normalizer_mean, std = input_normalizer_std, is_label=False)
+    output_normalizer = PointGaussianNormalizer(train_loader, mean = output_normalizer_mean, std = output_normalizer_std, is_label=True)
+
+    input_normalizer = input_normalizer.cuda(device)
+    output_normalizer = output_normalizer.cuda(device)
+
 
 
 else:
-    print('Normalizer not found, creating a new one and saving it')
-    a_normalizer = UnitGaussianNormalizer(train_a)
-    y_normalizer = UnitGaussianNormalizer(train_u)
-    torch.save(a_normalizer.mean, os.path.join((path_normalizer), f'{case_name}_a_normalizer_mean.pt'))
-    torch.save(a_normalizer.std, os.path.join((path_normalizer), f'{case_name}_a_normalizer_std.pt'))
-
-    torch.save(y_normalizer.mean, os.path.join((path_normalizer), f'{case_name}_y_normalizer_mean.pt'))
-    torch.save(y_normalizer.std, os.path.join((path_normalizer), f'{case_name}_y_normalizer_std.pt'))
+    print('Normalizer not found')
+    #raise 
+    ValueError(f'Normalizer not found in {path_runs}')
 
 
-train_a= a_normalizer.encode(train_a)
-test_a = a_normalizer.encode(test_a)
-
-train_u = y_normalizer.encode(train_u)
-test_u = y_normalizer.encode(test_u)
-
-#DEFINE TRUE DATA - RESULTS OF DARTS SIMULATION
-true = y_normalizer.decode(test_u)
-
-
-# %%
+###############################################
 #Load model and print summary
 model = torch.load(path_model)
 model.eval(); 
@@ -136,8 +133,8 @@ print('Model loaded')
 #print number of parameters of model
 print(f'Number of parameters: {sum(p.numel() for p in model.parameters())}')
 
-
-# %%
+###############################################
+#OVERALL MODEL EVALUATION
 def extract_data(file_name):
     epoch_list = []
     mse_list = []
@@ -155,14 +152,11 @@ def extract_data(file_name):
                 l2_list.append(float(l2))
     return epoch_list, mse_list, l2_list
 
-if plot_model_eval:
-
-    path_normalizer
-    
+if plot_model_eval:   
    # Extract data
-    epoch_train, mse_train, l2_train = extract_data(os.path.join(path_normalizer, 'train.txt'))
+    epoch_train, mse_train, l2_train = extract_data(os.path.join(log_folder, 'train.txt'))
 
-    epoch_test, mse_test, l2_test =  extract_data(os.path.join(path_normalizer, 'test.txt'))
+    epoch_test, mse_test, l2_test =  extract_data(os.path.join(log_folder, 'test.txt'))
 
     # Create figure and axis
     fig, ax1 = plt.subplots()
@@ -176,7 +170,7 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test L2 values')
     ax1.legend()
-    plt.savefig(os.path.join(path_runs, 'model', f'{case_name}_model_eval_L2.png'))
+    plt.savefig(os.path.join(path_runs, f'{path_runs}_model_eval_L2.png'))
 
         # Create figure and axis
     fig, ax1 = plt.subplots()
@@ -191,133 +185,11 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test MSE values')
     ax1.legend()
-    plt.savefig(os.path.join(path_runs, 'model', f'{case_name}_model_eval_MSE.png'))
+    plt.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
+    plt.show()
 
-
-
-
-#save figure on model folder
-   
-# Show plot
-plt.show()
-
-# %%
-#predict number of samples
-test_a = test_a[:num_samples]
-pred = model(test_a)
-pred_un = y_normalizer.decode(pred)
-
-# %%
-if plot_comparison:
-    for index in range(num_samples):
-        test_y = true[index,...].detach().numpy()
-        predicted_y = pred_un[index,...].detach().numpy()
-
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
-        norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
-
-        img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
-        img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
-        img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
-
-        for img, ax in zip([img1, img2], axes[:2]):
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            fig.colorbar(img, cax=cax, orientation='vertical')
-
-        divider = make_axes_locatable(axes[2])
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        fig.colorbar(img3, cax=cax, orientation='vertical')
-
-        axes[0].set_title(f'Test - Sample {index+1}')
-        axes[1].set_title(f'Predicted  - Sample {index+1}')
-        axes[2].set_title(f'Absolute Error - Sample {index+1}')
-
-        for ax in axes:
-            ax.axis('off')
-
-        fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
-        plt.tight_layout()
-        plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
-        plt.show()
-        
-
-# %%
-# Given x and y arrays
-
-if plot_lines:
-    resolution  = test_y.shape[1]
-    x = np.arange(0, resolution, 4)
-    y = np.arange(0, resolution, 4)
-
-    time = test_y[:,0,0,0]
-
-    # Initialize empty lists for each line
-    diagonal = []
-    x_line = []
-    y_line = []
-
-    # Iterating over all elements
-    for i in range(len(x)):
-        for j in range(len(y)):
-            # For the diagonal, x and y are the same
-            if i == j:
-                diagonal.append((x[i], y[j]))
-            # For the x line, x equals 32 / 2
-            if x[i] == 32 / 2:
-                x_line.append((x[i], y[j]))
-            # For the y line, y equals 32 / 2
-            if y[j] == 32 / 2:
-                y_line.append((x[i], y[j]))
-
-    # Now you have your three lists:
-    print("Diagonal: ", diagonal)
-    print("X Line: ", x_line)
-    print("Y Line: ", y_line)
-    for index in range(num_samples):
-        test_y = true[index,...].detach().numpy()
-        predicted_y = pred_un[index,...].detach().numpy()
-
-        for line in [diagonal, x_line, y_line]:
-            for i, (x, y) in enumerate(line):
-
-                # Create main figure and axis
-                fig, main_ax = plt.subplots()
-
-                # Plot your data on the main axes
-                main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='solid', color = 'blue')
-                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='none', marker='o', color = 'red')
-                main_ax.legend()
-
-                # Set labels and title for the main figure
-                main_ax.set_xlabel('Time')
-                main_ax.set_ylabel(variable)
-                main_ax.set_title(f'Sample {index} {variable} at x= {x} and y = {y} ')
-
-                # Create inset of width 30% and height 30% at the upper right corner of the main plot
-                left, bottom, width, height = [0.15, 0.45, 0.3, 0.3] # adjust as needed
-                inset_ax = fig.add_axes([left, bottom, width, height])
-                im = inset_ax.imshow(test_a[0,-1, :, :, 1], cmap='jet')
-
-                inset_ax.scatter(x, y, s=20, edgecolor='black', facecolor='none', linewidth=2) # Assuming the step size is 4
-
-                #fix scale of main plot between 0 and 1 
-                main_ax.set_ylim([colorbar_vmin, colorbar_vmax])
-
-                inset_ax.axis('off')
-                #save the figure with a name that includes the x and y coordinates and the variable name on the images folder
-
-                fig.savefig(os.path.join(image_folder, f'Sample_{index+1}_comparison_point_x{x}_y{y}.png'), dpi=300)
-
-                # Show the plot
-                plt.show()
-
-                # Closing the figure to prevent from running out of memory
-                plt.close(fig)
-
-
-
-# %%
+###############################################
+#GENERATE IMAGES AND PLOTS FOR EACH MODEL
 def plot_to_memory_image(true, predicted, time_step, variable):
     buf = BytesIO()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
@@ -331,62 +203,138 @@ def plot_to_memory_image(true, predicted, time_step, variable):
     plt.savefig(buf, format='png')
     plt.close()
     buf.seek(0)
+
+
     return buf
 
-if plot_gifs == True:
-
-    gif_paths = []
-
-    for sample in range(num_samples):
-        # Rest of the code to generate the GIF for each sample
-        image_buffers = []
-        test_y = true[sample,...].detach().numpy()
-        predicted_y = pred_un[sample,...].detach().numpy()
-
-        for t in range(61):
-            buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
-            image_buffers.append(buf)
-
-        images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
-        buf_result = BytesIO()
-        imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
-
-        # Save the GIF
-        gif_save_path = os.path.join(image_folder, f'{case_name}_{sample}.gif')
-        with open(gif_save_path, 'wb') as f:
-            f.write(buf_result.getvalue())
-            buf_result.seek(0)
-
-        for buf in image_buffers:
-            buf.close()
-
-        # Store the GIF path in the list
-        gif_paths.append(gif_save_path)
-
-    image_buffers = []
-    test_y = true[sample,...].detach().numpy()
-    predicted_y = pred_un[sample,...].detach().numpy()
-
-    for t in range(61):
-        buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
-        image_buffers.append(buf)
-
-    images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
-    buf_result = BytesIO()
-    imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
-
-    gif_save_path = os.path.join(image_folder, f'{case_name}_{sample+1}.gif')
-    with open(gif_save_path, 'wb') as f:
-        f.write(buf_result.getvalue())
-
-    buf_result.seek(0)
-
-    for buf in image_buffers:
-        buf.close()
-
-    DisplayImage(buf_result.getvalue(), format='png')
-
-# %%
 
 
+for batch_idx, (x, y) in enumerate(test_loader):
+    x = x.to(device)
+    y = y.to(device)
 
+    x = input_normalizer.encode(x)
+    out = model(x)
+    y = output_normalizer.decode(y)
+    out = output_normalizer.decode(out)
+
+    num_samples = x.size(0)
+
+    if plot_comparison:
+        for index in range(num_samples):
+            test_y = y[index,...].detach().cpu().numpy()
+            predicted_y = out[index,...].detach().cpu().numpy()
+
+            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+            norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
+
+            img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
+            img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
+            img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
+
+            for img, ax in zip([img1, img2, img3], axes):
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                fig.colorbar(img, cax=cax, orientation='vertical')
+
+            axes[0].set_title(f'Test - Sample {index+1}')
+            axes[1].set_title(f'Predicted  - Sample {index+1}')
+            axes[2].set_title(f'Absolute Error - Sample {index+1}')
+
+            for ax in axes:
+                ax.axis('off')
+
+            fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
+            plt.tight_layout()
+            plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
+            plt.show()
+
+    if plot_comparison:
+            for index in range(num_samples):
+                test_y = y[index,...].detach().cpu().numpy()
+                predicted_y = out[index,...].detach().cpu().numpy()
+                fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+                norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
+
+                img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
+                img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
+                img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
+
+                for img, ax in zip([img1, img2], axes[:2]):
+                    divider = make_axes_locatable(ax)
+                    cax = divider.append_axes("right", size="5%", pad=0.05)
+                    fig.colorbar(img, cax=cax, orientation='vertical')
+
+                divider = make_axes_locatable(axes[2])
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                fig.colorbar(img3, cax=cax, orientation='vertical')
+
+                axes[0].set_title(f'Test - Sample {index+1}')
+                axes[1].set_title(f'Predicted  - Sample {index+1}')
+                axes[2].set_title(f'Absolute Error - Sample {index+1}')
+
+                for ax in axes:
+                    ax.axis('off')
+
+                fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
+                plt.tight_layout()
+                plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
+                plt.show()
+        
+                if plot_lines:
+                    resolution  = test_y.shape[1]
+                    x_line = np.arange(0, resolution, 4)
+                    y_line = np.arange(0, resolution, 4)
+                    time = test_y[:,0,0,0]
+                    diagonal = [(i, i) for i in range(len(x_line))]
+                    x_mid = [(int(resolution/2), i) for i in range(len(x_line))]
+                    y_mid = [(i, int(resolution/2)) for i in range(len(y_line))]
+
+                    for line in [diagonal, x_mid, y_mid]:
+                        for i, (x, y) in enumerate(line):
+                            fig, main_ax = plt.subplots()
+
+                            main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='solid', color = 'blue')
+                            main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='none', marker='o', color = 'red')
+                            main_ax.legend()
+
+                            main_ax.set_xlabel('Time')
+                            main_ax.set_ylabel(variable)
+                            main_ax.set_title(f'Sample {index+1} {variable} at x= {x} and y = {y} ')
+                            main_ax.set_ylim([colorbar_vmin, colorbar_vmax])
+
+                            left, bottom, width, height = [0.15, 0.45, 0.3, 0.3] # adjust as needed
+                            inset_ax = fig.add_axes([left, bottom, width, height])
+                            im = inset_ax.imshow(test_y[0,-1, :, :, 1], cmap='jet')
+                            inset_ax.scatter(x, y, s=20, edgecolor='black', facecolor='none', linewidth=2) 
+
+                            inset_ax.axis('off')
+
+                            fig.savefig(os.path.join(image_folder, f'Sample_{index+1}_comparison_point_x{x}_y{y}.png'), dpi=300)
+                            plt.show()
+                            plt.close(fig)
+
+                if plot_gifs:
+                    gif_paths = []
+                    image_buffers = []
+
+                    for t in range(61): # Assuming you have 61 time steps
+                        buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
+                        image_buffers.append(buf)
+
+                    images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
+                    buf_result = BytesIO()
+                    imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
+
+                    # Save the GIF
+                    gif_save_path = os.path.join(image_folder, f'{case_name}_{index+1}.gif')
+                    with open(gif_save_path, 'wb') as f:
+                        f.write(buf_result.getvalue())
+                        buf_result.seek(0)
+
+                    for buf in image_buffers:
+                        buf.close()
+                    # Display the GIF (assuming you are in Jupyter notebook)
+                    
+
+                    gif_paths.append(gif_save_path)
