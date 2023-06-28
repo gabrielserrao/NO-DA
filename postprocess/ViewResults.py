@@ -12,6 +12,7 @@ import imageio
 from io import BytesIO
 from IPython.display import Image as DisplayImage
 from model_fourier_3d import *
+import torchmetrics
 print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
 import os
@@ -42,6 +43,7 @@ SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
+EVALUATE_METRICS = False
 plot_model_eval = True
 plot_comparison = True
 plot_lines = True
@@ -209,13 +211,55 @@ def plot_to_memory_image(true, predicted, time_step, variable):
 
     return buf
 
+#%%
+if EVALUATE_METRICS:
+# Instantiate the metric
+    metric = torchmetrics.MeanSquaredError()
 
+    mse_scores = []
 
+    # Iterate over test data
+    for batch_idx, (x, y_true) in enumerate(test_loader):
+        x = x.to(device)
+        y_true = y_true.to(device)
+
+        # Apply normalization and model prediction
+        x = input_normalizer.encode(x)
+        y_pred = model(x)
+        y_true = output_normalizer.decode(y_true)
+        y_pred = output_normalizer.decode(y_pred)
+
+        # Compute and store the Mean Squared Error
+        mse = metric(y_pred, y_true)
+        mse_scores.append((batch_idx, mse.item()))  # .item() is used to get a Python number from a tensor containing a single value
+
+    # Sort MSE scores
+    mse_scores.sort(key=lambda x: x[1])
+
+    # The model with the lowest error is the best
+    best_model_index = mse_scores[0][0]
+    print(f"The best model index is: {best_model_index}")
+
+    # The model with the highest error is the worst
+    worst_model_index = mse_scores[-1][0]
+    print(f"The worst model index is: {worst_model_index}")
+
+    # Create a plot
+    indices, scores = zip(*mse_scores)  # Unpack mse_scores
+    plt.figure(figsize=(10, 6))
+    plt.plot(indices, scores, marker='o')
+    plt.xlabel('Model index')
+    plt.ylabel('MSE score')
+    plt.title('MSE score per model index')
+    plt.show()
+    fig.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
+
+#%%
 for batch_idx, (x, y) in enumerate(test_loader):        
         if batch_idx in BATCH_TO_PLOT:
             #check if batch_idx is in samples to plot
             x = x.to(device)
-            y = y.to(device)
+            true_y = y.to(device)
             x = input_normalizer.encode(x)
             out = model(x)
             out = output_normalizer.decode(out)
@@ -224,7 +268,7 @@ for batch_idx, (x, y) in enumerate(test_loader):
             if plot_comparison:
                 for index in SAMPLES_TO_PLOT:
                     sample = batch_idx * BATCH_SIZE + index
-                    test_y = y[sample,...].detach().cpu().numpy()
+                    test_y = true_y[sample,...].detach().cpu().numpy()
                     predicted_y = out[sample,...].detach().cpu().numpy()
 
                     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
