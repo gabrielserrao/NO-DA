@@ -16,6 +16,8 @@ from model_fourier_3d import *
 import torch
 print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
+import os
+print(os.getcwd())
 #%%
 ################################################################
 # configs-1
@@ -25,7 +27,7 @@ np.random.seed(0)
 
 folder = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['Pressure'] 
+output_vars = ['CO_2'] 
 num_files= 1000
 traintest_split = 0.8
 batch_size = 10
@@ -38,7 +40,7 @@ epochs = 200
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 12
+modes = 18
 width = 128
 
 # Prepare the path
