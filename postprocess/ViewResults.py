@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import re
 import numpy as np
-#%%
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib as mpl
 from utilities import *
@@ -22,9 +21,9 @@ print(os.getcwd())
 ###############################################
 #INTIAL CONFIGS
 # DATASET
-FOLDER = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+FOLDER = "../dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-OUTPUT_VARS = ['CO_2'] 
+OUTPUT_VARS = ['Pressure'] 
 
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
@@ -36,10 +35,14 @@ EPOCHS = 200
 MODES = 18
 WIDTH = 128
 
+#List of samples to plot:
+BATCH_TO_PLOT = [0]
+SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
-plot_model_eval =True
+plot_model_eval = True
 plot_comparison = True
 plot_lines = True
 plot_gifs =True
@@ -76,7 +79,7 @@ if variable == 'CO_2':
 elif variable == 'Pressure':
     colorbar_vmin, colorbar_vmax = 200.0, 600.0 # Define your min and max here
   # Change this to the index you want
-      
+#%%     
 ###############################################
 #LOAD DATA
 
@@ -122,17 +125,16 @@ else:
     #raise 
     ValueError(f'Normalizer not found in {path_runs}')
 
-
+#%%
 ###############################################
-#Load model and print summary
-model = torch.load(path_model)
-model.eval(); 
-print(model)
+device = torch.device("cpu")
+model = torch.load(path_model, map_location=device).to(device)  # load the model to CPU
+
 #extract main parameters of model and print them like padding, number of layers, etc
 print('Model loaded')
 #print number of parameters of model
 print(f'Number of parameters: {sum(p.numel() for p in model.parameters())}')
-
+#%%
 ###############################################
 #OVERALL MODEL EVALUATION
 def extract_data(file_name):
@@ -186,8 +188,8 @@ if plot_model_eval:
     ax1.set_title('Comparison of Train and Test MSE values')
     ax1.legend()
     plt.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
-    plt.show()
-
+    print('Model evaluation plots saved')
+#%%
 ###############################################
 #GENERATE IMAGES AND PLOTS FOR EACH MODEL
 def plot_to_memory_image(true, predicted, time_step, variable):
@@ -204,137 +206,106 @@ def plot_to_memory_image(true, predicted, time_step, variable):
     plt.close()
     buf.seek(0)
 
-
     return buf
 
 
 
-for batch_idx, (x, y) in enumerate(test_loader):
-    x = x.to(device)
-    y = y.to(device)
+for batch_idx, (x, y) in enumerate(test_loader):        
+        if batch_idx in BATCH_TO_PLOT:
+            #check if batch_idx is in samples to plot
+            x = x.to(device)
+            y = y.to(device)
+            x = input_normalizer.encode(x)
+            out = model(x)
+            out = output_normalizer.decode(out)
+            num_samples = x.size(0)
+            
+            if plot_comparison:
+                for index in SAMPLES_TO_PLOT:
+                    sample = batch_idx * BATCH_SIZE + index
+                    test_y = y[sample,...].detach().cpu().numpy()
+                    predicted_y = out[sample,...].detach().cpu().numpy()
 
-    x = input_normalizer.encode(x)
-    out = model(x)
-    y = output_normalizer.decode(y)
-    out = output_normalizer.decode(out)
+                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+                    norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
 
-    num_samples = x.size(0)
+                    img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
+                    img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
+                    img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
 
-    if plot_comparison:
-        for index in range(num_samples):
-            test_y = y[index,...].detach().cpu().numpy()
-            predicted_y = out[index,...].detach().cpu().numpy()
+                    for img, ax in zip([img1, img2, img3], axes):
+                        divider = make_axes_locatable(ax)
+                        cax = divider.append_axes("right", size="5%", pad=0.05)
+                        fig.colorbar(img, cax=cax, orientation='vertical')
 
-            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
-            norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
+                    axes[0].set_title(f'Test - Sample {sample+1}')
+                    axes[1].set_title(f'Predicted  - Sample {sample+1}')
+                    axes[2].set_title(f'Absolute Error - Sample {sample+1}')
 
-            img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
-            img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
-            img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
+                    for ax in axes:
+                        ax.axis('off')
 
-            for img, ax in zip([img1, img2, img3], axes):
-                divider = make_axes_locatable(ax)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                fig.colorbar(img, cax=cax, orientation='vertical')
+                    fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
+                    plt.tight_layout()
+                    plt.savefig(os.path.join(image_folder, f"comparison_{sample+1}.png"))
+                    print(f"Comparison_{sample+1}.png saved") 
+            
+                    if plot_lines:
+                        resolution  = test_y.shape[1]
+                        x_line = np.arange(0, resolution, 4)
+                        y_line = np.arange(0, resolution, 4)
+                        time = test_y[:,0,0,0]
+                        diagonal = [(i, i) for i in range(len(x_line))]
+                        x_mid = [(int(resolution/2), i) for i in range(len(x_line))]
+                        y_mid = [(i, int(resolution/2)) for i in range(len(y_line))]
 
-            axes[0].set_title(f'Test - Sample {index+1}')
-            axes[1].set_title(f'Predicted  - Sample {index+1}')
-            axes[2].set_title(f'Absolute Error - Sample {index+1}')
+                        for line in [diagonal, x_mid, y_mid]:
+                            for i, (x, y) in enumerate(line):
+                                fig, main_ax = plt.subplots()
 
-            for ax in axes:
-                ax.axis('off')
+                                main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='solid', color = 'blue')
+                                main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='none', marker='o', color = 'red')
+                                main_ax.legend()
 
-            fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
-            plt.tight_layout()
-            plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
-            plt.show()
+                                main_ax.set_xlabel('Time')
+                                main_ax.set_ylabel(variable)
+                                main_ax.set_title(f'Sample {sample+1} {variable} at x= {x} and y = {y} ')
+                                main_ax.set_ylim([colorbar_vmin, colorbar_vmax])
 
-    if plot_comparison:
-            for index in range(num_samples):
-                test_y = y[index,...].detach().cpu().numpy()
-                predicted_y = out[index,...].detach().cpu().numpy()
-                fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
-                norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
+                                left, bottom, width, height = [0.15, 0.45, 0.3, 0.3] # adjust as needed
+                                inset_ax = fig.add_axes([left, bottom, width, height])
+                                im = inset_ax.imshow(test_y[-1, :, :, 0], cmap='jet')
+                                inset_ax.scatter(x, y, s=20, edgecolor='black', facecolor='none', linewidth=2) 
 
-                img1 = axes[0].imshow(test_y[-1, :, :, 0], cmap='jet', norm=norm)
-                img2 = axes[1].imshow(predicted_y[-1, :, :, 0], cmap='jet', norm=norm)
-                img3 = axes[2].imshow(np.abs(test_y[ -1, :, :, 0] - predicted_y[ -1, :, :, 0]), cmap='jet')
+                                inset_ax.axis('off')
 
-                for img, ax in zip([img1, img2], axes[:2]):
-                    divider = make_axes_locatable(ax)
-                    cax = divider.append_axes("right", size="5%", pad=0.05)
-                    fig.colorbar(img, cax=cax, orientation='vertical')
+                                fig.savefig(os.path.join(image_folder, f'Sample_{sample+1}_comparison_point_x{x}_y{y}.png'), dpi=300)
+                                print(f'Sample_{sample+1}_comparison_point_x{x}_y{y}.png saved')
+                               
 
-                divider = make_axes_locatable(axes[2])
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                fig.colorbar(img3, cax=cax, orientation='vertical')
+                    if plot_gifs:
+                        gif_paths = []
+                        image_buffers = []
 
-                axes[0].set_title(f'Test - Sample {index+1}')
-                axes[1].set_title(f'Predicted  - Sample {index+1}')
-                axes[2].set_title(f'Absolute Error - Sample {index+1}')
+                        for t in range(61): # Assuming you have 61 time steps
+                            buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
+                            image_buffers.append(buf)
 
-                for ax in axes:
-                    ax.axis('off')
+                        images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
+                        buf_result = BytesIO()
+                        imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
 
-                fig.suptitle(f'Comparison of Test and Predicted {variable} values for 3D Fourier Neural Operator')
-                plt.tight_layout()
-                plt.savefig(os.path.join(image_folder, f"comparison_{index+1}.png"))
-                plt.show()
-        
-                if plot_lines:
-                    resolution  = test_y.shape[1]
-                    x_line = np.arange(0, resolution, 4)
-                    y_line = np.arange(0, resolution, 4)
-                    time = test_y[:,0,0,0]
-                    diagonal = [(i, i) for i in range(len(x_line))]
-                    x_mid = [(int(resolution/2), i) for i in range(len(x_line))]
-                    y_mid = [(i, int(resolution/2)) for i in range(len(y_line))]
+                        # Save the GIF
+                        gif_save_path = os.path.join(image_folder, f'Comparison_{sample+1}.gif')
+                        with open(gif_save_path, 'wb') as f:
+                            f.write(buf_result.getvalue())
+                            buf_result.seek(0)
 
-                    for line in [diagonal, x_mid, y_mid]:
-                        for i, (x, y) in enumerate(line):
-                            fig, main_ax = plt.subplots()
+                        for buf in image_buffers:
+                            buf.close()
+                        # Display the GIF (assuming you are in Jupyter notebook)
+                        print(f'Comparison_{sample+1}.gif saved')
 
-                            main_ax.plot(time, test_y[:, x, y, 0], label='True', linestyle='solid', color = 'blue')
-                            main_ax.plot(time, predicted_y[:, x, y, 0], label='Predicted', linestyle='none', marker='o', color = 'red')
-                            main_ax.legend()
+                        gif_paths.append(gif_save_path)
 
-                            main_ax.set_xlabel('Time')
-                            main_ax.set_ylabel(variable)
-                            main_ax.set_title(f'Sample {index+1} {variable} at x= {x} and y = {y} ')
-                            main_ax.set_ylim([colorbar_vmin, colorbar_vmax])
-
-                            left, bottom, width, height = [0.15, 0.45, 0.3, 0.3] # adjust as needed
-                            inset_ax = fig.add_axes([left, bottom, width, height])
-                            im = inset_ax.imshow(test_y[0,-1, :, :, 1], cmap='jet')
-                            inset_ax.scatter(x, y, s=20, edgecolor='black', facecolor='none', linewidth=2) 
-
-                            inset_ax.axis('off')
-
-                            fig.savefig(os.path.join(image_folder, f'Sample_{index+1}_comparison_point_x{x}_y{y}.png'), dpi=300)
-                            plt.show()
-                            plt.close(fig)
-
-                if plot_gifs:
-                    gif_paths = []
-                    image_buffers = []
-
-                    for t in range(61): # Assuming you have 61 time steps
-                        buf = plot_to_memory_image(test_y[t, :, :, 0], predicted_y[t, :, :, 0], t, variable = variable)
-                        image_buffers.append(buf)
-
-                    images = [imageio.imread(buf.getvalue()) for buf in image_buffers]
-                    buf_result = BytesIO()
-                    imageio.mimsave(buf_result, images, format='GIF', duration=0.5)
-
-                    # Save the GIF
-                    gif_save_path = os.path.join(image_folder, f'{case_name}_{index+1}.gif')
-                    with open(gif_save_path, 'wb') as f:
-                        f.write(buf_result.getvalue())
-                        buf_result.seek(0)
-
-                    for buf in image_buffers:
-                        buf.close()
-                    # Display the GIF (assuming you are in Jupyter notebook)
-                    
-
-                    gif_paths.append(gif_save_path)
+# %%
