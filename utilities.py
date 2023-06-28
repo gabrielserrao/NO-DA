@@ -228,10 +228,14 @@ class UnitGaussianNormalizer(object):
     
 # normalization, pointwise gaussian
 class PointGaussianNormalizer(object):
-    def __init__(self, dataloader, is_label=False, eps=0.00001):
+    def __init__(self, dataloader, mean=None, std=None, is_label=False, eps=0.00001):
         super(PointGaussianNormalizer, self).__init__()
         self.eps = eps
-        self.mean, self.std = self.batch_mean_and_sd(dataloader, is_label)
+        if mean is None or std is None:
+            self.mean, self.std = self.batch_mean_and_sd(dataloader, is_label)
+        else:
+            self.mean = mean
+            self.std = std
 
     def batch_mean_and_sd(self, loader, is_label):
         cnt = 0
@@ -427,3 +431,5 @@ def count_params(model):
         c += reduce(operator.mul, 
                     list(p.size()+(2,) if p.is_complex() else p.size()))
     return c
+
+
