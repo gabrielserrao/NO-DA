@@ -156,7 +156,7 @@ for ep in range(epochs):
         train_mse += mse.item()
         train_l2 += l2.item() 
            
-        print_memory_usage()
+        #print_memory_usage()
 
     model.eval()
     test_l2 = 0.0
