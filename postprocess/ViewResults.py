@@ -44,10 +44,10 @@ SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 device = 'cpu'
 #OUTPUT CONFIGURATION
 EVALUATE_METRICS = True
-plot_model_eval = True
-plot_comparison = True
-plot_lines = True
-plot_gifs =True
+plot_model_eval = False
+plot_comparison = False
+plot_lines = False
+plot_gifs =False
 ###############################################
 variable = OUTPUT_VARS[0]
 ntrain = NUM_FILES * TRAINTEST_SPLIT
@@ -131,7 +131,7 @@ else:
 ###############################################
 device = torch.device("cpu")
 model = torch.load(path_model, map_location=device).to(device)  # load the model to CPU
-
+model.eval()  # set the model to evaluation mode
 #extract main parameters of model and print them like padding, number of layers, etc
 print('Model loaded')
 #print number of parameters of model
@@ -210,42 +210,62 @@ if EVALUATE_METRICS:
     metric = torchmetrics.MeanSquaredError()
 
     mse_scores = []
+    std_parameter_samples = []
 
     # Iterate over test data
-    for batch_idx, (x, y_true) in enumerate(test_loader):
-        x = x.to(device)
-        y_true = y_true.to(device)
-
-        # Apply normalization and model prediction
-        x = input_normalizer.encode(x)
-        y_pred = model(x)
-        y_true = output_normalizer.decode(y_true)
-        y_pred = output_normalizer.decode(y_pred)
-
-        # Compute and store the Mean Squared Error
-        mse = metric(y_pred, y_true)
-        mse_scores.append((batch_idx, mse.item()))  # .item() is used to get a Python number from a tensor containing a single value
-
-    # Sort MSE scores
-    mse_scores.sort(key=lambda x: x[1])
-
-    # The model with the lowest error is the best
-    best_model_index = mse_scores[0][0]
-    print(f"The best model index is: {best_model_index}")
-
-    # The model with the highest error is the worst
-    worst_model_index = mse_scores[-1][0]
-    print(f"The worst model index is: {worst_model_index}")
+    for batch_idx, (x, y) in enumerate(test_loader):
+            x = x.to(device)
+            true_y = y.to(device)
+            x = input_normalizer.encode(x)
+            out = model(x)
+            out = output_normalizer.decode(out)
+            x = input_normalizer.decode(x)
+            num_samples = x.size(0)
+            for index in range(num_samples):
+                sample = batch_idx * BATCH_SIZE + index
+                test_y = true_y[index,...].detach().cpu()
+                predicted_y = out[index,...].detach().cpu()
+                 # Compute and store the Mean Squared Error
+                mse = metric(predicted_y, test_y)
+                print(f"Sample {sample} - MSE: {mse.item()}")
+                mse_scores.append((sample, mse.item()))  # .item() is used to get a Python number from a tensor containing a single value
+                #compute the std of the the permeability of the sample
+                std = torch.std(x[index,0,:,:,1]) #permeability
+                std_parameter_samples.append((sample, std.item()))
 
     # Create a plot
     indices, scores = zip(*mse_scores)  # Unpack mse_scores
-    plt.figure(figsize=(10, 6))
-    plt.plot(indices, scores, marker='o')
-    plt.xlabel('Model index')
-    plt.ylabel('MSE score')
-    plt.title('MSE score per model index')
-    plt.show()
-    fig.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
+
+    fig, ax = plt.subplots()
+    #scatter plot
+    ax.scatter(indices, scores)
+    #mean line
+    ax.axhline(np.mean(scores), color='red', linestyle='dashed', linewidth=1)
+    ax.set_xlabel('Sample')
+    ax.set_ylabel('MSE')
+    ax.set_title('MSE of all models')
+    plt.savefig(os.path.join(log_folder, 'mse_scores.jpg'))
+    plt.close()
+
+    #save a text file on logs folder with the MSE of all models 
+    with open(os.path.join(log_folder, 'mse_scores.txt'), 'w') as file:
+        for sample, mse in mse_scores:
+            file.write(f'Sample {sample} - MSE: {mse}\n')
+
+    #plot the MSE of the sample against the std of the permeability. A scatter plot of mse and std of the permeability
+    indices, std_param = zip(*std_parameter_samples)  # Unpack mse_scores
+    fig, ax = plt.subplots()
+    ax.scatter(std_param, scores)
+    ax.set_xlabel('Std of the permeability')
+    ax.set_ylabel('MSE')
+    ax.set_title('MSE of all models')
+    plt.savefig(os.path.join(log_folder, 'mse_scores_std.jpg'))
+    plt.close()
+
+
+
+
+#%%   
 
 #%%
 for batch_idx, (x, y) in enumerate(test_loader):        
@@ -261,8 +281,8 @@ for batch_idx, (x, y) in enumerate(test_loader):
             if plot_comparison:
                 for index in SAMPLES_TO_PLOT:
                     sample = batch_idx * BATCH_SIZE + index
-                    test_y = true_y[sample,...].detach().cpu().numpy()
-                    predicted_y = out[sample,...].detach().cpu().numpy()
+                    test_y = true_y[index,...].detach().cpu()
+                    predicted_y = out[index,...].detach().cpu()
 
                     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
                     norm = mpl.colors.Normalize(vmin=colorbar_vmin, vmax=colorbar_vmax)
