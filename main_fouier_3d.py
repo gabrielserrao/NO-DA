@@ -180,7 +180,8 @@ for ep in range(epochs):
             test_l2 += myloss(out.view(batch_size, -1), y.view(batch_size, -1)).item()            
             test_mse += mse.item()
 
-            if index == 0:
+            #save figure every 10 epochs
+            if ep % 10 == 0 and index == 0:
                 test_y_shape = (1, 61, 32, 32, 1)
                 predicted_y_shape = (1, 61, 32, 32, 1)
                 test_y = y[0].detach().view(test_y_shape).cpu().numpy()
