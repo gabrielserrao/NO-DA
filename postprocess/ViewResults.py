@@ -37,13 +37,13 @@ MODES = 18
 WIDTH = 128
 
 #List of samples to plot:
-BATCH_TO_PLOT = [0]
+BATCH_TO_PLOT = [1]
 SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
-EVALUATE_METRICS = False
+EVALUATE_METRICS = True
 plot_model_eval = True
 plot_comparison = True
 plot_lines = True
@@ -184,14 +184,7 @@ if plot_model_eval:
     ax1.plot(epoch_test, mse_test, 'g-', label='Test MSE')
 
 
-    # Set labels and title
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Value')
-    ax1.set_title('Comparison of Train and Test MSE values')
-    ax1.legend()
-    plt.savefig(os.path.join(path_runs, 'model', f'{path_runs}_model_eval_MSE.png'))
-    print('Model evaluation plots saved')
-    plt.close()
+
 #%%
 ###############################################
 #GENERATE IMAGES AND PLOTS FOR EACH MODEL
