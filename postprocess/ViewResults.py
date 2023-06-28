@@ -31,7 +31,7 @@ BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
 NUM_FILES= 1000
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 10
-EPOCHS = 200
+EPOCHS = 110
 MODES = 18
 WIDTH = 128
 
