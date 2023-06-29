@@ -29,10 +29,10 @@ OUTPUT_VARS = ['Pressure']
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
 
-NUM_FILES= 1000
+NUM_FILES= 200
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 10
-EPOCHS = 110
+EPOCHS = 200
 MODES = 18
 WIDTH = 128
 
@@ -174,7 +174,7 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test L2 values')
     ax1.legend()
-    plt.savefig(os.path.join(path_runs, f'{path_runs}_model_eval_L2.png'))
+    plt.savefig(os.path.join(log_folder, f'{path_runs}_model_eval_L2.png'))
 
         # Create figure and axis
     fig, ax1 = plt.subplots()
@@ -188,7 +188,7 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test MSE values')
     ax1.legend()
-    plt.savefig(os.path.join(path_runs, f'{path_runs}_model_eval_MSE.png'))
+    plt.savefig(os.path.join(log_folder, f'{path_runs}_model_eval_MSE.png'))
 
 
 
