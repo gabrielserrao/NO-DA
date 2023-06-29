@@ -24,10 +24,11 @@ print(os.getcwd())
 torch.manual_seed(0)
 np.random.seed(0)
 
-folder = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+tag = 'MonthQg' 
+folder = "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['CO_2'] 
-num_files= 200
+num_files= 1000
 traintest_split = 0.8
 batch_size = 10
 
@@ -43,7 +44,7 @@ modes = 18
 width = 128
 
 # Prepare the path
-path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, epochs, modes, width, batch_size)
+path = 'FNO_3d_{}_N{}_ep{}_m{}_w{}_b{}'.format(tag,ntrain, epochs, modes, width, batch_size)
 
 
 # Include in the path the input and output variables
@@ -92,7 +93,7 @@ test_loader = DataLoader(torch.utils.data.Subset(dataset, range(train_size, trai
                          shuffle=False)
 
 t2 = default_timer()
-
+#%%
 # We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
 
 input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
