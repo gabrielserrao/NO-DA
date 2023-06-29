@@ -3,7 +3,6 @@
 Adapted from Zongyi Li TODO: include referene in the README
 This file is the Fourier Neural Operator for 3D problem takes the 2D spatial + 1D temporal equation directly as a 3D problem
 """
-
 import sys
 import os
 import torch.nn.functional as F
@@ -28,7 +27,7 @@ np.random.seed(0)
 folder = "./dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['CO_2'] 
-num_files= 1000
+num_files= 200
 traintest_split = 0.8
 batch_size = 10
 
