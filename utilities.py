@@ -139,7 +139,7 @@ class ReadXarray():
                     scalar_matrix = scalar_matrix.unsqueeze(0).expand(data.time.size, -1, -1)
                     input_data.append(scalar_matrix)
                 elif 'time' in data[var].dims:
-                    scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) #using [0] as I am geting info from the first well 
+                    scalar_matrix = torch.tensor(data[var][0].values, dtype=torch.float32) #use data[var] [0] if I am geting info from the first well 
                     scalar_matrix = scalar_matrix.unsqueeze(-1).unsqueeze(-1).expand(-1, data.X.size, data.Y.size)
                     input_data.append(scalar_matrix)
 
