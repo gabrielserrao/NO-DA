@@ -168,3 +168,99 @@ class FNO3d(nn.Module):
         gridz = torch.tensor(np.linspace(0, 1, size_z), dtype=torch.float)
         gridz = gridz.reshape(1, 1, 1, size_z, 1).repeat([batchsize, size_x, size_y, 1, 1])
         return torch.cat((gridx, gridy, gridz), dim=-1).to(device)
+
+
+class SelfAttention(nn.Module):
+    def __init__(self, in_channels):
+        super(SelfAttention, self).__init__()
+
+        self.query = nn.Conv3d(in_channels, in_channels // 8, 1)
+        self.key = nn.Conv3d(in_channels, in_channels // 8, 1)
+        self.value = nn.Conv3d(in_channels, in_channels, 1)
+        self.gamma = nn.Parameter(torch.tensor(0.0))
+        
+    def forward(self, x):
+        queries = self.query(x)
+        keys = self.key(x)
+        values = self.value(x)
+
+        batch_size, channels, depth, height, width = x.size()
+        queries = queries.view(batch_size, -1, depth * height * width).permute(0, 2, 1)
+        keys = keys.view(batch_size, -1, depth * height * width)
+        values = values.view(batch_size, -1, depth * height * width).permute(0, 2, 1)
+
+        attention_weights = torch.softmax(torch.bmm(queries, keys), dim=-1)
+
+        attention_output = torch.bmm(attention_weights, values).permute(0, 2, 1).contiguous()
+        attention_output = attention_output.view(batch_size, channels, depth, height, width)
+
+        out = self.gamma * attention_output + x
+
+        return out
+    
+class A_FNO3d(nn.Module):
+    def __init__(self, modes1, modes2, modes3, width):
+        super(A_FNO3d, self).__init__()
+
+        
+        self.modes1 = modes1
+        self.modes2 = modes2
+        self.modes3 = modes3
+        self.width = width
+        self.padding = 4 # pad the domain if input is non-periodic -. defautl 4 
+        #TODO: padding = 4 
+
+        self.p = nn.Linear(6, self.width)# input channel is 7: Por, Perm, gas_rate, Pressure + x, y, time encodings
+        self.conv0 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
+        self.conv1 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
+        self.conv2 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
+        self.conv3 = SpectralConv3d(self.width, self.width, self.modes1, self.modes2, self.modes3)
+        self.mlp0 = MLP(self.width, self.width, self.width)
+        self.mlp1 = MLP(self.width, self.width, self.width)
+        self.mlp2 = MLP(self.width, self.width, self.width)
+        self.mlp3 = MLP(self.width, self.width, self.width)
+        self.w0 = nn.Conv3d(self.width, self.width, 1)
+        self.w1 = nn.Conv3d(self.width, self.width, 1)
+        self.w2 = nn.Conv3d(self.width, self.width, 1)
+        self.w3 = nn.Conv3d(self.width, self.width, 1)
+        self.q = MLP(self.width, 1, self.width * 4) # output channel is 1: u(x, y)
+
+
+
+        self.self_attention = SelfAttention(self.width)
+
+    def forward(self, x):
+        grid = self.get_grid(x.shape, x.device)
+        x = self.p(x)
+        x = x.permute(0, 4, 1, 2, 3)
+        p3d = (self.padding, self.padding, self.padding, self.padding, self.padding, self.padding)
+        x = F.pad(x, p3d)
+        x1 = self.conv0(x)
+        x1 = self.mlp0(x1)
+        x1 = self.self_attention(x1)
+        x2 = self.w0(x)
+        x = x1 + x2
+        x = F.gelu(x)
+
+        x1 = self.conv3(x)
+        x1 = self.mlp3(x1)
+        x2 = self.w3(x)
+        x = x1 + x2
+
+
+        x = x[..., self.padding:-self.padding, self.padding:-self.padding, self.padding:-self.padding] 
+        
+        x = self.q(x)
+        x = x.permute(0, 2, 3, 4, 1) # pad the domain if input is non-periodic
+
+        return x
+
+    def get_grid(self, shape, device):
+        batchsize, size_x, size_y, size_z = shape[0], shape[1], shape[2], shape[3]
+        gridx = torch.tensor(np.linspace(0, 1, size_x), dtype=torch.float)
+        gridx = gridx.reshape(1, size_x, 1, 1, 1).repeat([batchsize, 1, size_y, size_z, 1])
+        gridy = torch.tensor(np.linspace(0, 1, size_y), dtype=torch.float)
+        gridy = gridy.reshape(1, 1, size_y, 1, 1).repeat([batchsize, size_x, 1, size_z, 1])
+        gridz = torch.tensor(np.linspace(0, 1, size_z), dtype=torch.float)
+        gridz = gridz.reshape(1, 1, 1, size_z, 1).repeat([batchsize, size_x, size_y, 1, 1])
+        return torch.cat((gridx, gridy, gridz), dim=-1).to(device)

@@ -17,6 +17,14 @@ print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
 import os
 print(os.getcwd())
+
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 #%%
 ################################################################
 # configs-1
@@ -24,13 +32,13 @@ print(os.getcwd())
 torch.manual_seed(0)
 np.random.seed(0)
 
-tag = 'MonthQg' 
+tag = '' 
 folder = "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
+output_vars = ['Pressure'] 
 num_files= 1000
 traintest_split = 0.8
-batch_size = 10
+batch_size = 1
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
@@ -40,11 +48,11 @@ epochs = 500
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 18
+modes = 6
 width = 128
 
 # Prepare the path
-path = 'FNO_3d_{}_N{}_ep{}_m{}_w{}_b{}'.format(tag,ntrain, epochs, modes, width, batch_size)
+path = 'A_FNO_3d{}_N{}_ep{}_m{}_w{}_b{}'.format(tag,ntrain, epochs, modes, width, batch_size)
 
 
 # Include in the path the input and output variables
@@ -119,7 +127,7 @@ print('preprocessing finished, time used:', t2-t1)
 ################################################################
 # training and evaluation
 ################################################################
-model = FNO3d(modes, modes, modes, width)
+model = A_FNO3d(modes, modes, modes, width)
 print_memory_usage()
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)

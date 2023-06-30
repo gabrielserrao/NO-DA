@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 from scipy import ndimage
 from skimage.filters.rank import entropy
@@ -42,10 +43,10 @@ def plot_maps(permeability_map, binary_map, entropy_map, title):
     axs[2].imshow(entropy_map, cmap='magma')
     axs[2].set_title(f'{title} Entropy Map')
     plt.show()
-
+#%%
 # Compute and print metrics
-threshold = 60  # adjust as needed
-neighborhood_radius = 10  # adjust as needed
+threshold = 60 # adjust as needed
+neighborhood_radius = 1  # adjust as needed
 
 # Gaussian map
 gaussian_permeability_map = generate_gaussian_map()
@@ -72,3 +73,5 @@ print(f'More Channels map: mean entropy = {mean_entropy}')
 plot_maps(channel_permeability_map, binary_map, entropy_map, 'More Channels')
 
 
+
+# %%

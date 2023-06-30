@@ -29,7 +29,8 @@ OUTPUT_VARS = ['CO_2']
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
 
-NUM_FILES= 1000
+TAG = ''
+NUM_FILES= 200
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 10
 EPOCHS = 200
@@ -46,13 +47,13 @@ device = 'cpu'
 EVALUATE_METRICS = True
 plot_model_eval = True
 plot_comparison = True
-plot_lines = True
+plot_lines =True
 plot_gifs =True
 ###############################################
 variable = OUTPUT_VARS[0]
 ntrain = NUM_FILES * TRAINTEST_SPLIT
 ntest = NUM_FILES - ntrain
-path = 'FNO_3d_N{}_ep{}_m{}_w{}_b{}'.format(ntrain, EPOCHS, MODES, WIDTH, BATCH_SIZE)
+path = 'FNO_3d{}_N{}_ep{}_m{}_w{}_b{}'.format(TAG,ntrain, EPOCHS, MODES, WIDTH, BATCH_SIZE)
 path += '_INPUT_' + '_'.join(INPUT_VARS) + '_OUTPUT_' + '_'.join(OUTPUT_VARS)
 path_runs = os.path.join(BASE_PATH, path)
 path_model = os.path.join(path_runs, f'{path}_model.pt')
@@ -220,6 +221,11 @@ if EVALUATE_METRICS:
     mse_scores = []
     std_parameter_samples = []
 
+    entropy_scores = []
+    connectivity_scores = []
+    threshold = 10  # adjust as needed
+    neighborhood_radius = 10  # adjust as needed
+
     # Iterate over test data
     for batch_idx, (x, y) in enumerate(test_loader):
             x = x.to(device)
@@ -229,7 +235,9 @@ if EVALUATE_METRICS:
             out = output_normalizer.decode(out)
             x = input_normalizer.decode(x)
             num_samples = x.size(0)
-            for index in range(num_samples):
+            for index in range(num_samples):              
+
+      
                 sample = batch_idx * BATCH_SIZE + index
                 test_y = true_y[index,...].detach().cpu()
                 predicted_y = out[index,...].detach().cpu()
@@ -239,7 +247,12 @@ if EVALUATE_METRICS:
                 mse_scores.append((sample, mse.item()))  # .item() is used to get a Python number from a tensor containing a single value
                 #compute the std of the the permeability of the sample
                 std = torch.std(x[index,0,:,:,1]) #permeability
-                std_parameter_samples.append((sample, std.item()))
+                std_parameter_samples.append((sample, std.item()))  
+
+                entropy_map, mean_entropy = compute_entropy(x[index,0,:,:,1], neighborhood_radius)
+                binary_map, num_components = compute_connectivity(x[index,0,:,:,1], threshold)                
+                entropy_scores.append((sample, mean_entropy))
+                connectivity_scores.append((sample, num_components))
 
     # Create a plot
     indices, scores = zip(*mse_scores)  # Unpack mse_scores
@@ -269,6 +282,29 @@ if EVALUATE_METRICS:
     ax.set_title('MSE of all models')
     plt.savefig(os.path.join(log_folder, 'mse_scores_std.jpg'))
     plt.close()
+
+    # Plot MSE against Mean Entropy
+    mse_indices, mse_scores = zip(*mse_scores)
+    entropy_indices, entropy_scores = zip(*entropy_scores)
+    fig, ax = plt.subplots()
+    ax.scatter(mse_scores, entropy_scores)
+    
+    ax.set_xlabel('MSE')
+    ax.set_ylabel('Entropy')
+    ax.set_title('MSE vs Entropy of all models')
+    plt.savefig(os.path.join(log_folder, 'mse_vs_entropy.jpg'))
+    plt.close()
+
+    # Plot MSE against Number of Connected Components
+    connectivity_indices, connectivity_scores = zip(*connectivity_scores)
+    fig, ax = plt.subplots()
+    ax.scatter(mse_scores, connectivity_scores)
+    ax.set_xlabel('MSE')
+    ax.set_ylabel('Number of Connected Components')
+    ax.set_title('MSE vs Connectivity of all models')
+    plt.savefig(os.path.join(log_folder, 'mse_vs_connectivity.jpg'))
+    plt.close()
+
 
 
 
