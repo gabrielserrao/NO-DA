@@ -14,6 +14,11 @@ from functools import reduce
 from functools import partial
 import psutil
 
+from scipy import ndimage
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
+from skimage.util import img_as_ubyte
+
 def print_memory_usage():
     process = psutil.Process(os.getpid())
     print(f'Memory usage: {round(process.memory_info().rss / 1024 ** 3)} GB')
@@ -433,3 +438,16 @@ def count_params(model):
     return c
 
 
+def compute_connectivity(permeability_map, threshold):
+    binary_map = permeability_map > threshold
+    labeled_map, num_components = ndimage.measurements.label(binary_map)
+    return binary_map, num_components
+
+def compute_entropy(permeability_map, neighborhood_radius):
+    permeability_map_tensor = torch.from_numpy(permeability_map) if isinstance(permeability_map, np.ndarray) else permeability_map
+
+    permeability_map_ubyte = img_as_ubyte((permeability_map_tensor - torch.min(permeability_map_tensor)) / (torch.max(permeability_map_tensor) - torch.min(permeability_map_tensor)))
+ 
+    entropy_map = entropy(permeability_map_ubyte, disk(neighborhood_radius))
+    mean_entropy = np.mean(entropy_map)
+    return entropy_map, mean_entropy
