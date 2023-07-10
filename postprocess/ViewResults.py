@@ -24,17 +24,17 @@ print(os.getcwd())
 # DATASET
 FOLDER = "../dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-OUTPUT_VARS = ['CO_2'] 
+OUTPUT_VARS = ['Pressure'] 
 
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
 
-TAG = ''
+TAG = '_'
 NUM_FILES= 200
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 10
-EPOCHS = 200
-MODES = 18
+EPOCHS = 100
+MODES = 12
 WIDTH = 128
 
 #List of samples to plot:

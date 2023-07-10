@@ -24,11 +24,11 @@ print(os.getcwd())
 torch.manual_seed(0)
 np.random.seed(0)
 
-tag = 'MonthQg' 
-folder = "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+tag = '' 
+folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
-num_files= 1000
+output_vars = ['Pressure'] 
+num_files= 200
 traintest_split = 0.8
 batch_size = 10
 
@@ -36,11 +36,11 @@ ntrain = num_files*traintest_split
 ntest = num_files - ntrain
 
 learning_rate = 0.001
-epochs = 500
+epochs = 100
 
 
 iterations = epochs*(ntrain//batch_size)
-modes = 18
+modes = 12
 width = 128
 
 # Prepare the path
