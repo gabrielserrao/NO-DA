@@ -278,6 +278,48 @@ class PointGaussianNormalizer(object):
         self.std = self.std.to(device)
         return self 
 
+class PointMinMaxNormalizer(object):
+    def __init__(self, dataloader, min_val=None, max_val=None, is_label=False):
+        super(PointMinMaxNormalizer, self).__init__()
+        if min_val is None or max_val is None:
+            self.min_val, self.max_val = self.batch_min_and_max(dataloader, is_label)
+        else:
+            self.min_val = min_val
+            self.max_val = max_val
+
+    def batch_min_and_max(self, loader, is_label):
+        min_val = None
+        max_val = None
+
+        for data, labels in loader:
+            data = labels if is_label else data  # if this is label normalizer, normalize labels
+            data_shape = data.shape[-1]
+            if min_val is None:
+                min_val = torch.zeros(data_shape)
+                max_val = torch.zeros(data_shape)
+
+            b, t, h, w, c = data.shape
+            data = data.view(b * t * h * w, c)
+            batch_min = torch.min(data, dim=0)[0]
+            batch_max = torch.max(data, dim=0)[0]
+            min_val = torch.min(min_val, batch_min)
+            max_val = torch.max(max_val, batch_max)
+
+        return min_val, max_val
+
+    def encode(self, x):
+        return (x - self.min_val) / (self.max_val - self.min_val)
+
+    def decode(self, x):
+        return x * (self.max_val - self.min_val) + self.min_val
+
+    def cuda(self, device):
+        self.min_val = self.min_val.to(device)
+        self.max_val = self.max_val.to(device)
+        return self
+
+
+
 
 
 #################################################
@@ -451,3 +493,28 @@ def compute_entropy(permeability_map, neighborhood_radius):
     entropy_map = entropy(permeability_map_ubyte, disk(neighborhood_radius))
     mean_entropy = np.mean(entropy_map)
     return entropy_map, mean_entropy
+
+
+def check_for_nan(dataloader):
+    for batch_idx, (inputs, outputs) in enumerate(dataloader):
+        for model_idx, (model_input, model_output) in enumerate(zip(inputs, outputs)):
+            if torch.isnan(model_input).any() or torch.isnan(model_output).any():
+                # Calculate the global model index based on the batch index, batch size, and model index within the batch
+                global_model_idx = batch_idx * dataloader.batch_size + model_idx
+                print(f"Model {global_model_idx} contains NaN values.")
+    print("Done checking for NaN values.")
+
+def check_and_move_files_with_nan(src_folder, dst_folder):
+    # Get a list of all .nc files in the source folder
+    file_list = [f for f in os.listdir(src_folder) if f.endswith(".nc")]
+
+    for file_name in file_list:
+        file_path = os.path.join(src_folder, file_name)
+        d = xr.open_dataset(file_path)
+        # Flatten the data to 1D and convert to numpy array
+        input_data = np.ravel(d.to_array().values)
+        if np.isnan(input_data).any():
+            dst_path = os.path.join(dst_folder, file_name)
+            shutil.move(file_path, dst_path)
+            print(f"Moved file {file_name} due to NaN values.")
+
