@@ -24,13 +24,14 @@ print(os.getcwd())
 torch.manual_seed(0)
 np.random.seed(0)
 
-tag = '' 
-folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+tag = 'MonthQg' 
+folder =  "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['Pressure'] 
-num_files= 200
+output_vars = ['CO_2'] 
+num_files= 1000
 traintest_split = 0.8
 batch_size = 10
+normalizer = 'MinMax'
 
 ntrain = num_files*traintest_split
 ntest = num_files - ntrain
@@ -44,7 +45,7 @@ modes = 12
 width = 128
 
 # Prepare the path
-path = 'FNO_3d_{}_N{}_ep{}_m{}_w{}_b{}'.format(tag,ntrain, epochs, modes, width, batch_size)
+path = 'FNO_3d_{}_N{}_ep{}_m{}_w{}_b{}_norm{}'.format(tag,ntrain, epochs, modes, width, batch_size, normalizer)
 
 
 # Include in the path the input and output variables
@@ -96,18 +97,32 @@ t2 = default_timer()
 #%%
 # We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
 
-input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
-output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
+if normalizer == 'Gaussian':
+    input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
+    output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
 
-input_normalizer = input_normalizer.cuda(device)
-output_normalizer = output_normalizer.cuda(device)
+    input_normalizer = input_normalizer.cuda(device)
+    output_normalizer = output_normalizer.cuda(device)
 
 
-#save the normalizers mean and std on pytorch files
-torch.save(input_normalizer.mean,os.path.join('runs', path, 'normalizer_mean_input.pt'))
-torch.save(input_normalizer.std, os.path.join('runs', path, 'normalizer_std_input.pt'))
-torch.save(output_normalizer.mean, os.path.join('runs', path, 'normalizer_mean_output.pt'))
-torch.save(output_normalizer.std, os.path.join('runs', path, 'normalizer_std_output.pt'))
+    #save the normalizers mean and std on pytorch files
+    torch.save(input_normalizer.mean,os.path.join('runs', path, 'normalizer_mean_input.pt'))
+    torch.save(input_normalizer.std, os.path.join('runs', path, 'normalizer_std_input.pt'))
+    torch.save(output_normalizer.mean, os.path.join('runs', path, 'normalizer_mean_output.pt'))
+    torch.save(output_normalizer.std, os.path.join('runs', path, 'normalizer_std_output.pt'))
+    
+elif normalizer == 'MinMax':
+    input_normalizer = PointMinMaxNormalizer(train_loader, is_label=False)
+    output_normalizer = PointMinMaxNormalizer(train_loader, is_label=True)
+
+    input_normalizer = input_normalizer.cuda(device)
+    output_normalizer = output_normalizer.cuda(device)
+
+    #save the normalizers min and max on pytorch files
+    torch.save(input_normalizer.min_val ,os.path.join('runs', path, 'normalizer_min_input.pt'))
+    torch.save(input_normalizer.max_val, os.path.join('runs', path, 'normalizer_max_input.pt'))
+    torch.save(output_normalizer.min_val , os.path.join('runs', path, 'normalizer_min_output.pt'))
+    torch.save(output_normalizer.max_val, os.path.join('runs', path, 'normalizer_max_output.pt'))
 
 
 print_memory_usage()
