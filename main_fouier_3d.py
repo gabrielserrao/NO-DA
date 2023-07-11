@@ -24,10 +24,10 @@ print(os.getcwd())
 torch.manual_seed(0)
 np.random.seed(0)
 
-tag = 'MonthQg' 
-folder =  "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered"  # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+tag = 'MonthQgWELLpos' 
+folder =  "/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
+output_vars = ['Pressure'] 
 num_files= 1000
 traintest_split = 0.8
 batch_size = 10
@@ -67,9 +67,8 @@ path_train_err = os.path.join(path_log, 'train.txt')
 path_test_err = os.path.join(path_log, 'test.txt')
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-#device = 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 print('Using ' + device + ' for training')
 
 
@@ -80,7 +79,7 @@ runtime = np.zeros(2, )
 t1 = default_timer()
 
 # Create instance of ReadXarrayDatasetNorm class for training data
-dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, wells_positions=False)
+dataset = ReadXarrayDataset(folder=folder, input_vars=input_vars, output_vars=output_vars, num_files = num_files, wells_positions=True)
 
 train_size = int(traintest_split * len(dataset))
 test_size = len(dataset) - train_size
