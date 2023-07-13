@@ -1,0 +1,580 @@
+1.13.0+cu117
+GPUs:1
+/samoa/data/smrserraoseabr/NO-DA
+Using cuda for training
+Memory usage: 3 GB
+preprocessing finished, time used: 0.0007053930312395096
+Memory usage: 14 GB
+epoch 0 of 300
+ep 0: t=72.061, train_mse=1.012e+00, train_l2=4.922e+03, test_l2=9.494e+03, test_mse=9.807e-01
+epoch 1 of 300
+ep 1: t=71.500, train_mse=1.013e+00, train_l2=1.910e+03, test_l2=2.071e+02, test_mse=9.910e-01
+epoch 2 of 300
+ep 2: t=71.725, train_mse=1.015e+00, train_l2=1.457e+03, test_l2=1.754e+03, test_mse=9.940e-01
+epoch 3 of 300
+ep 3: t=71.895, train_mse=1.016e+00, train_l2=1.751e+03, test_l2=1.834e+03, test_mse=9.887e-01
+epoch 4 of 300
+ep 4: t=71.991, train_mse=1.014e+00, train_l2=7.624e+02, test_l2=1.814e+03, test_mse=9.941e-01
+epoch 5 of 300
+ep 5: t=71.837, train_mse=1.015e+00, train_l2=1.724e+03, test_l2=9.336e+02, test_mse=9.900e-01
+epoch 6 of 300
+ep 6: t=71.839, train_mse=1.016e+00, train_l2=1.040e+03, test_l2=6.412e+02, test_mse=9.903e-01
+epoch 7 of 300
+ep 7: t=71.779, train_mse=1.014e+00, train_l2=5.446e+02, test_l2=2.734e+02, test_mse=9.908e-01
+epoch 8 of 300
+ep 8: t=71.827, train_mse=1.014e+00, train_l2=9.936e+02, test_l2=6.197e+02, test_mse=9.921e-01
+epoch 9 of 300
+ep 9: t=71.876, train_mse=1.015e+00, train_l2=9.655e+02, test_l2=3.960e+03, test_mse=9.978e-01
+epoch 10 of 300
+ep 10: t=72.036, train_mse=1.014e+00, train_l2=6.677e+02, test_l2=3.096e+02, test_mse=9.908e-01
+epoch 11 of 300
+ep 11: t=71.888, train_mse=1.015e+00, train_l2=1.250e+03, test_l2=3.245e+02, test_mse=9.908e-01
+epoch 12 of 300
+ep 12: t=71.850, train_mse=1.016e+00, train_l2=1.460e+03, test_l2=2.448e+03, test_mse=9.878e-01
+epoch 13 of 300
+ep 13: t=72.021, train_mse=1.015e+00, train_l2=1.093e+03, test_l2=1.938e+03, test_mse=9.885e-01
+epoch 14 of 300
+ep 14: t=72.026, train_mse=1.015e+00, train_l2=8.846e+02, test_l2=2.141e+02, test_mse=9.916e-01
+epoch 15 of 300
+ep 15: t=72.087, train_mse=1.015e+00, train_l2=1.238e+03, test_l2=2.298e+03, test_mse=9.880e-01
+epoch 16 of 300
+ep 16: t=71.948, train_mse=1.014e+00, train_l2=1.165e+03, test_l2=2.017e+03, test_mse=9.884e-01
+epoch 17 of 300
+ep 17: t=71.743, train_mse=1.015e+00, train_l2=7.947e+02, test_l2=6.260e+02, test_mse=9.910e-01
+epoch 18 of 300
+ep 18: t=71.804, train_mse=1.014e+00, train_l2=5.906e+02, test_l2=1.658e+03, test_mse=9.889e-01
+epoch 19 of 300
+ep 19: t=71.678, train_mse=1.015e+00, train_l2=9.605e+02, test_l2=2.912e+02, test_mse=9.908e-01
+epoch 20 of 300
+ep 20: t=72.024, train_mse=1.014e+00, train_l2=1.156e+03, test_l2=1.951e+02, test_mse=9.915e-01
+epoch 21 of 300
+ep 21: t=71.790, train_mse=1.014e+00, train_l2=1.247e+03, test_l2=7.816e+02, test_mse=9.924e-01
+epoch 22 of 300
+ep 22: t=71.839, train_mse=1.015e+00, train_l2=7.878e+02, test_l2=1.445e+03, test_mse=9.934e-01
+epoch 23 of 300
+ep 23: t=71.888, train_mse=1.013e+00, train_l2=9.531e+02, test_l2=4.864e+02, test_mse=9.905e-01
+epoch 24 of 300
+ep 24: t=71.804, train_mse=1.014e+00, train_l2=1.203e+03, test_l2=7.055e+02, test_mse=9.923e-01
+epoch 25 of 300
+ep 25: t=71.930, train_mse=1.014e+00, train_l2=4.869e+02, test_l2=7.383e+02, test_mse=9.902e-01
+epoch 26 of 300
+ep 26: t=71.942, train_mse=1.015e+00, train_l2=6.619e+02, test_l2=1.360e+03, test_mse=9.933e-01
+epoch 27 of 300
+ep 27: t=72.058, train_mse=1.014e+00, train_l2=4.232e+02, test_l2=1.637e+02, test_mse=9.915e-01
+epoch 28 of 300
+ep 28: t=72.194, train_mse=1.014e+00, train_l2=7.499e+02, test_l2=1.418e+03, test_mse=9.892e-01
+epoch 29 of 300
+ep 29: t=72.026, train_mse=1.014e+00, train_l2=9.068e+02, test_l2=9.359e+02, test_mse=9.899e-01
+epoch 30 of 300
+ep 30: t=71.977, train_mse=1.014e+00, train_l2=3.121e+02, test_l2=1.709e+02, test_mse=9.910e-01
+epoch 31 of 300
+ep 31: t=71.818, train_mse=1.014e+00, train_l2=6.792e+02, test_l2=5.915e+02, test_mse=9.921e-01
+epoch 32 of 300
+ep 32: t=72.023, train_mse=1.014e+00, train_l2=2.975e+02, test_l2=8.249e+01, test_mse=9.911e-01
+epoch 33 of 300
+ep 33: t=71.972, train_mse=1.015e+00, train_l2=9.703e+02, test_l2=6.618e+02, test_mse=9.922e-01
+epoch 34 of 300
+ep 34: t=71.900, train_mse=1.014e+00, train_l2=1.073e+03, test_l2=1.995e+03, test_mse=9.943e-01
+epoch 35 of 300
+ep 35: t=71.928, train_mse=1.015e+00, train_l2=8.077e+02, test_l2=1.271e+03, test_mse=9.932e-01
+epoch 36 of 300
+ep 36: t=71.996, train_mse=1.015e+00, train_l2=6.454e+02, test_l2=1.898e+02, test_mse=9.910e-01
+epoch 37 of 300
+ep 37: t=71.883, train_mse=1.014e+00, train_l2=5.981e+02, test_l2=1.778e+03, test_mse=9.887e-01
+epoch 38 of 300
+ep 38: t=72.018, train_mse=1.014e+00, train_l2=7.237e+02, test_l2=1.383e+02, test_mse=9.910e-01
+epoch 39 of 300
+ep 39: t=71.833, train_mse=1.015e+00, train_l2=3.833e+02, test_l2=4.963e+02, test_mse=9.920e-01
+epoch 40 of 300
+ep 40: t=72.151, train_mse=1.014e+00, train_l2=5.205e+02, test_l2=8.894e+01, test_mse=9.911e-01
+epoch 41 of 300
+ep 41: t=71.907, train_mse=1.014e+00, train_l2=3.585e+02, test_l2=4.249e+02, test_mse=9.919e-01
+epoch 42 of 300
+ep 42: t=71.906, train_mse=1.014e+00, train_l2=2.456e+02, test_l2=9.403e+00, test_mse=9.912e-01
+epoch 43 of 300
+ep 43: t=71.914, train_mse=1.015e+00, train_l2=5.819e+02, test_l2=1.375e+03, test_mse=9.893e-01
+epoch 44 of 300
+ep 44: t=71.841, train_mse=1.013e+00, train_l2=7.056e+02, test_l2=9.128e+01, test_mse=9.913e-01
+epoch 45 of 300
+ep 45: t=72.016, train_mse=1.014e+00, train_l2=1.929e+02, test_l2=1.315e+02, test_mse=9.910e-01
+epoch 46 of 300
+ep 46: t=71.936, train_mse=1.014e+00, train_l2=2.397e+02, test_l2=4.014e+00, test_mse=9.912e-01
+epoch 47 of 300
+ep 47: t=71.941, train_mse=1.014e+00, train_l2=6.356e+02, test_l2=1.565e+02, test_mse=9.914e-01
+epoch 48 of 300
+ep 48: t=72.238, train_mse=1.015e+00, train_l2=3.504e+02, test_l2=5.274e+02, test_mse=9.905e-01
+epoch 49 of 300
+ep 49: t=72.485, train_mse=1.014e+00, train_l2=3.173e+02, test_l2=1.328e+02, test_mse=9.910e-01
+epoch 50 of 300
+ep 50: t=72.299, train_mse=1.014e+00, train_l2=7.670e+02, test_l2=5.780e+02, test_mse=9.921e-01
+epoch 51 of 300
+ep 51: t=72.201, train_mse=1.014e+00, train_l2=3.261e+02, test_l2=5.099e+02, test_mse=9.920e-01
+epoch 52 of 300
+ep 52: t=72.183, train_mse=1.015e+00, train_l2=4.757e+02, test_l2=5.272e+01, test_mse=9.912e-01
+epoch 53 of 300
+ep 53: t=72.184, train_mse=1.015e+00, train_l2=6.645e+02, test_l2=2.120e+02, test_mse=9.909e-01
+epoch 54 of 300
+ep 54: t=71.893, train_mse=1.015e+00, train_l2=3.381e+02, test_l2=3.130e+02, test_mse=9.908e-01
+epoch 55 of 300
+ep 55: t=71.890, train_mse=1.014e+00, train_l2=2.829e+02, test_l2=3.560e+02, test_mse=9.918e-01
+epoch 56 of 300
+ep 56: t=72.046, train_mse=1.015e+00, train_l2=5.129e+02, test_l2=4.949e+02, test_mse=9.905e-01
+epoch 57 of 300
+ep 57: t=72.055, train_mse=1.014e+00, train_l2=2.684e+02, test_l2=1.550e+02, test_mse=9.910e-01
+epoch 58 of 300
+ep 58: t=71.966, train_mse=1.014e+00, train_l2=4.335e+02, test_l2=7.502e+02, test_mse=9.901e-01
+epoch 59 of 300
+ep 59: t=71.883, train_mse=1.015e+00, train_l2=5.520e+02, test_l2=1.534e+02, test_mse=9.910e-01
+epoch 60 of 300
+ep 60: t=72.050, train_mse=1.014e+00, train_l2=6.406e+02, test_l2=2.137e+02, test_mse=9.910e-01
+epoch 61 of 300
+ep 61: t=71.983, train_mse=1.015e+00, train_l2=2.429e+03, test_l2=7.292e+03, test_mse=1.002e+00
+epoch 62 of 300
+ep 62: t=71.964, train_mse=2.862e+00, train_l2=6.468e+04, test_l2=5.229e+04, test_mse=1.362e+00
+epoch 63 of 300
+ep 63: t=72.036, train_mse=1.417e+00, train_l2=3.779e+04, test_l2=9.117e+03, test_mse=1.004e+00
+epoch 64 of 300
+ep 64: t=72.107, train_mse=1.015e+00, train_l2=6.420e+03, test_l2=5.493e+03, test_mse=9.960e-01
+epoch 65 of 300
+ep 65: t=71.919, train_mse=1.014e+00, train_l2=2.113e+03, test_l2=1.687e+03, test_mse=9.929e-01
+epoch 66 of 300
+ep 66: t=71.893, train_mse=1.013e+00, train_l2=1.498e+03, test_l2=1.309e+03, test_mse=9.923e-01
+epoch 67 of 300
+ep 67: t=71.877, train_mse=1.013e+00, train_l2=1.009e+03, test_l2=7.541e+01, test_mse=9.906e-01
+epoch 68 of 300
+ep 68: t=71.930, train_mse=1.014e+00, train_l2=9.490e+02, test_l2=8.376e+02, test_mse=9.894e-01
+epoch 69 of 300
+ep 69: t=72.050, train_mse=1.014e+00, train_l2=7.567e+02, test_l2=2.926e+02, test_mse=9.911e-01
+epoch 70 of 300
+ep 70: t=72.184, train_mse=1.014e+00, train_l2=5.964e+02, test_l2=1.100e+03, test_mse=9.923e-01
+epoch 71 of 300
+ep 71: t=72.179, train_mse=1.013e+00, train_l2=7.583e+02, test_l2=2.804e+02, test_mse=9.911e-01
+epoch 72 of 300
+ep 72: t=71.857, train_mse=1.013e+00, train_l2=6.332e+02, test_l2=2.188e+01, test_mse=9.908e-01
+epoch 73 of 300
+ep 73: t=72.038, train_mse=1.014e+00, train_l2=6.357e+02, test_l2=2.696e+02, test_mse=9.905e-01
+epoch 74 of 300
+ep 74: t=72.044, train_mse=1.014e+00, train_l2=1.963e+02, test_l2=3.035e+02, test_mse=9.905e-01
+epoch 75 of 300
+ep 75: t=72.085, train_mse=1.014e+00, train_l2=7.771e+02, test_l2=1.453e+02, test_mse=9.908e-01
+epoch 76 of 300
+ep 76: t=71.920, train_mse=1.014e+00, train_l2=4.926e+02, test_l2=5.290e+02, test_mse=9.903e-01
+epoch 77 of 300
+ep 77: t=72.065, train_mse=1.014e+00, train_l2=4.280e+02, test_l2=8.545e+02, test_mse=9.923e-01
+epoch 78 of 300
+ep 78: t=72.012, train_mse=1.014e+00, train_l2=5.797e+02, test_l2=5.658e+02, test_mse=9.919e-01
+epoch 79 of 300
+ep 79: t=71.926, train_mse=1.014e+00, train_l2=5.173e+02, test_l2=4.338e+02, test_mse=9.905e-01
+epoch 80 of 300
+ep 80: t=72.130, train_mse=1.014e+00, train_l2=4.004e+02, test_l2=7.423e+02, test_mse=9.923e-01
+epoch 81 of 300
+ep 81: t=72.076, train_mse=1.014e+00, train_l2=5.459e+02, test_l2=5.631e+02, test_mse=9.920e-01
+epoch 82 of 300
+ep 82: t=72.096, train_mse=1.014e+00, train_l2=4.920e+02, test_l2=3.547e+02, test_mse=9.907e-01
+epoch 83 of 300
+ep 83: t=71.979, train_mse=1.015e+00, train_l2=3.823e+02, test_l2=7.811e+02, test_mse=9.925e-01
+epoch 84 of 300
+ep 84: t=72.099, train_mse=1.014e+00, train_l2=5.297e+02, test_l2=6.177e+02, test_mse=9.922e-01
+epoch 85 of 300
+ep 85: t=72.073, train_mse=1.014e+00, train_l2=4.745e+02, test_l2=2.604e+02, test_mse=9.909e-01
+epoch 86 of 300
+ep 86: t=72.032, train_mse=1.014e+00, train_l2=1.557e+02, test_l2=2.474e+02, test_mse=9.909e-01
+epoch 87 of 300
+ep 87: t=72.101, train_mse=1.014e+00, train_l2=6.216e+02, test_l2=3.412e+01, test_mse=9.913e-01
+epoch 88 of 300
+ep 88: t=72.016, train_mse=1.014e+00, train_l2=2.434e+02, test_l2=2.820e+02, test_mse=9.918e-01
+epoch 89 of 300
+ep 89: t=72.159, train_mse=1.014e+00, train_l2=1.698e+02, test_l2=6.409e+01, test_mse=9.914e-01
+epoch 90 of 300
+ep 90: t=72.177, train_mse=1.014e+00, train_l2=4.141e+02, test_l2=3.733e+02, test_mse=9.907e-01
+epoch 91 of 300
+ep 91: t=72.072, train_mse=1.014e+00, train_l2=3.647e+02, test_l2=7.136e+02, test_mse=9.924e-01
+epoch 92 of 300
+ep 92: t=72.039, train_mse=1.014e+00, train_l2=5.035e+02, test_l2=5.646e+02, test_mse=9.922e-01
+epoch 93 of 300
+ep 93: t=72.130, train_mse=1.014e+00, train_l2=4.626e+02, test_l2=2.763e+02, test_mse=9.910e-01
+epoch 94 of 300
+ep 94: t=72.190, train_mse=1.015e+00, train_l2=3.336e+02, test_l2=9.143e+01, test_mse=9.912e-01
+epoch 95 of 300
+ep 95: t=72.781, train_mse=1.014e+00, train_l2=5.977e+02, test_l2=8.082e+01, test_mse=9.920e-01
+epoch 96 of 300
+ep 96: t=72.243, train_mse=1.014e+00, train_l2=1.921e+02, test_l2=2.461e+02, test_mse=9.910e-01
+epoch 97 of 300
+ep 97: t=72.538, train_mse=1.014e+00, train_l2=1.468e+02, test_l2=2.404e+02, test_mse=9.909e-01
+epoch 98 of 300
+ep 98: t=72.324, train_mse=1.014e+00, train_l2=5.845e+02, test_l2=1.832e+01, test_mse=9.912e-01
+epoch 99 of 300
+ep 99: t=72.235, train_mse=1.014e+00, train_l2=2.284e+02, test_l2=2.532e+02, test_mse=9.917e-01
+epoch 100 of 300
+ep 100: t=72.490, train_mse=1.014e+00, train_l2=1.596e+02, test_l2=5.102e+01, test_mse=9.914e-01
+epoch 101 of 300
+ep 101: t=72.067, train_mse=1.014e+00, train_l2=3.875e+02, test_l2=3.642e+02, test_mse=9.907e-01
+epoch 102 of 300
+ep 102: t=72.201, train_mse=1.014e+00, train_l2=3.412e+02, test_l2=6.457e+02, test_mse=9.923e-01
+epoch 103 of 300
+ep 103: t=72.028, train_mse=1.014e+00, train_l2=4.693e+02, test_l2=5.006e+02, test_mse=9.921e-01
+epoch 104 of 300
+ep 104: t=72.133, train_mse=1.015e+00, train_l2=4.726e+02, test_l2=4.292e+02, test_mse=9.922e-01
+epoch 105 of 300
+ep 105: t=71.962, train_mse=1.015e+00, train_l2=5.742e+02, test_l2=3.071e+02, test_mse=9.924e-01
+epoch 106 of 300
+ep 106: t=72.091, train_mse=1.014e+00, train_l2=3.397e+02, test_l2=1.044e+02, test_mse=9.910e-01
+epoch 107 of 300
+ep 107: t=72.082, train_mse=1.014e+00, train_l2=2.099e+02, test_l2=2.469e+02, test_mse=9.909e-01
+epoch 108 of 300
+ep 108: t=72.080, train_mse=1.014e+00, train_l2=2.393e+02, test_l2=6.812e+02, test_mse=9.903e-01
+epoch 109 of 300
+ep 109: t=72.143, train_mse=1.014e+00, train_l2=3.802e+02, test_l2=2.087e+02, test_mse=9.916e-01
+epoch 110 of 300
+ep 110: t=72.458, train_mse=1.014e+00, train_l2=1.501e+02, test_l2=1.018e+01, test_mse=9.913e-01
+epoch 111 of 300
+ep 111: t=72.369, train_mse=1.014e+00, train_l2=2.977e+02, test_l2=4.843e+02, test_mse=9.905e-01
+epoch 112 of 300
+ep 112: t=72.386, train_mse=1.015e+00, train_l2=3.721e+02, test_l2=5.612e+02, test_mse=9.921e-01
+epoch 113 of 300
+ep 113: t=72.176, train_mse=1.014e+00, train_l2=4.324e+02, test_l2=4.247e+02, test_mse=9.919e-01
+epoch 114 of 300
+ep 114: t=72.125, train_mse=1.014e+00, train_l2=4.015e+02, test_l2=3.462e+02, test_mse=9.921e-01
+epoch 115 of 300
+ep 115: t=72.223, train_mse=1.014e+00, train_l2=3.087e+02, test_l2=2.739e+01, test_mse=9.916e-01
+epoch 116 of 300
+ep 116: t=72.115, train_mse=1.014e+00, train_l2=5.372e+02, test_l2=5.650e+02, test_mse=9.927e-01
+epoch 117 of 300
+ep 117: t=72.135, train_mse=1.015e+00, train_l2=4.010e+02, test_l2=6.931e+02, test_mse=9.910e-01
+epoch 118 of 300
+ep 118: t=72.161, train_mse=1.014e+00, train_l2=1.971e+02, test_l2=1.025e+02, test_mse=9.909e-01
+epoch 119 of 300
+ep 119: t=72.265, train_mse=1.014e+00, train_l2=2.908e+02, test_l2=2.032e+02, test_mse=9.914e-01
+epoch 120 of 300
+ep 120: t=72.319, train_mse=1.014e+00, train_l2=1.595e+02, test_l2=3.111e+02, test_mse=9.908e-01
+epoch 121 of 300
+ep 121: t=72.039, train_mse=1.014e+00, train_l2=1.569e+02, test_l2=2.124e+02, test_mse=9.916e-01
+epoch 122 of 300
+ep 122: t=72.162, train_mse=1.014e+00, train_l2=5.288e+02, test_l2=4.832e+02, test_mse=9.920e-01
+epoch 123 of 300
+ep 123: t=72.015, train_mse=1.014e+00, train_l2=3.594e+02, test_l2=6.001e+02, test_mse=9.903e-01
+epoch 124 of 300
+ep 124: t=72.143, train_mse=1.014e+00, train_l2=1.526e+02, test_l2=1.390e+02, test_mse=9.915e-01
+epoch 125 of 300
+ep 125: t=72.169, train_mse=1.014e+00, train_l2=3.123e+02, test_l2=2.275e+02, test_mse=9.916e-01
+epoch 126 of 300
+ep 126: t=72.164, train_mse=1.014e+00, train_l2=1.306e+02, test_l2=4.945e+01, test_mse=9.912e-01
+epoch 127 of 300
+ep 127: t=72.177, train_mse=1.015e+00, train_l2=4.555e+02, test_l2=2.471e+01, test_mse=9.913e-01
+epoch 128 of 300
+ep 128: t=72.086, train_mse=1.014e+00, train_l2=1.983e+02, test_l2=3.776e+02, test_mse=9.919e-01
+epoch 129 of 300
+ep 129: t=72.288, train_mse=1.014e+00, train_l2=3.569e+02, test_l2=2.811e+02, test_mse=9.915e-01
+epoch 130 of 300
+ep 130: t=72.210, train_mse=1.014e+00, train_l2=1.560e+02, test_l2=1.719e+01, test_mse=9.911e-01
+epoch 131 of 300
+ep 131: t=72.254, train_mse=1.014e+00, train_l2=1.213e+02, test_l2=1.696e+02, test_mse=9.910e-01
+epoch 132 of 300
+ep 132: t=72.271, train_mse=1.014e+00, train_l2=4.409e+02, test_l2=4.858e+01, test_mse=9.914e-01
+epoch 133 of 300
+ep 133: t=72.752, train_mse=1.014e+00, train_l2=1.971e+02, test_l2=2.389e+02, test_mse=9.919e-01
+epoch 134 of 300
+ep 134: t=72.400, train_mse=1.014e+00, train_l2=1.468e+02, test_l2=1.150e+01, test_mse=9.912e-01
+epoch 135 of 300
+ep 135: t=72.417, train_mse=1.014e+00, train_l2=4.266e+02, test_l2=1.268e+03, test_mse=9.932e-01
+epoch 136 of 300
+ep 136: t=72.104, train_mse=1.014e+00, train_l2=2.294e+02, test_l2=1.510e+02, test_mse=9.912e-01
+epoch 137 of 300
+ep 137: t=72.311, train_mse=1.014e+00, train_l2=4.774e+02, test_l2=5.203e+01, test_mse=9.919e-01
+epoch 138 of 300
+ep 138: t=72.279, train_mse=1.014e+00, train_l2=3.525e+02, test_l2=2.138e+02, test_mse=9.918e-01
+epoch 139 of 300
+ep 139: t=72.256, train_mse=1.014e+00, train_l2=1.162e+02, test_l2=3.442e+01, test_mse=9.912e-01
+epoch 140 of 300
+ep 140: t=72.342, train_mse=1.014e+00, train_l2=2.748e+02, test_l2=3.608e+02, test_mse=9.906e-01
+epoch 141 of 300
+ep 141: t=72.182, train_mse=1.014e+00, train_l2=2.372e+02, test_l2=6.596e+02, test_mse=9.923e-01
+epoch 142 of 300
+ep 142: t=72.236, train_mse=1.014e+00, train_l2=2.987e+02, test_l2=1.166e+02, test_mse=9.922e-01
+epoch 143 of 300
+ep 143: t=72.035, train_mse=1.014e+00, train_l2=7.464e+02, test_l2=6.611e+02, test_mse=9.903e-01
+epoch 144 of 300
+ep 144: t=72.090, train_mse=1.014e+00, train_l2=3.825e+02, test_l2=2.290e+02, test_mse=9.914e-01
+epoch 145 of 300
+ep 145: t=72.192, train_mse=1.014e+00, train_l2=3.763e+02, test_l2=3.865e+02, test_mse=9.907e-01
+epoch 146 of 300
+ep 146: t=72.106, train_mse=1.014e+00, train_l2=2.324e+02, test_l2=3.810e+02, test_mse=9.919e-01
+epoch 147 of 300
+ep 147: t=72.236, train_mse=1.014e+00, train_l2=1.432e+02, test_l2=2.168e+01, test_mse=9.912e-01
+epoch 148 of 300
+ep 148: t=72.167, train_mse=1.014e+00, train_l2=2.670e+02, test_l2=1.642e+02, test_mse=9.909e-01
+epoch 149 of 300
+ep 149: t=72.117, train_mse=1.014e+00, train_l2=2.539e+02, test_l2=4.299e+02, test_mse=9.904e-01
+epoch 150 of 300
+ep 150: t=72.279, train_mse=1.014e+00, train_l2=1.533e+02, test_l2=3.985e+02, test_mse=9.906e-01
+epoch 151 of 300
+ep 151: t=72.331, train_mse=1.014e+00, train_l2=2.354e+02, test_l2=5.826e+01, test_mse=9.917e-01
+epoch 152 of 300
+ep 152: t=72.098, train_mse=1.014e+00, train_l2=8.727e+01, test_l2=7.810e+01, test_mse=9.914e-01
+epoch 153 of 300
+ep 153: t=72.156, train_mse=1.014e+00, train_l2=2.292e+02, test_l2=1.654e+02, test_mse=9.916e-01
+epoch 154 of 300
+ep 154: t=72.287, train_mse=1.014e+00, train_l2=9.403e+01, test_l2=5.524e+01, test_mse=9.912e-01
+epoch 155 of 300
+ep 155: t=72.364, train_mse=1.014e+00, train_l2=3.189e+02, test_l2=6.096e+01, test_mse=9.914e-01
+epoch 156 of 300
+ep 156: t=72.997, train_mse=1.014e+00, train_l2=1.016e+02, test_l2=2.035e+02, test_mse=9.909e-01
+epoch 157 of 300
+ep 157: t=72.458, train_mse=1.014e+00, train_l2=1.002e+02, test_l2=1.557e+02, test_mse=9.915e-01
+epoch 158 of 300
+ep 158: t=72.518, train_mse=1.014e+00, train_l2=3.336e+02, test_l2=4.155e+02, test_mse=9.920e-01
+epoch 159 of 300
+ep 159: t=72.812, train_mse=1.014e+00, train_l2=1.382e+02, test_l2=1.391e+01, test_mse=9.914e-01
+epoch 160 of 300
+ep 160: t=73.144, train_mse=1.015e+00, train_l2=4.397e+02, test_l2=1.035e+03, test_mse=9.901e-01
+epoch 161 of 300
+ep 161: t=73.508, train_mse=1.014e+00, train_l2=4.403e+02, test_l2=3.566e+02, test_mse=9.919e-01
+epoch 162 of 300
+ep 162: t=73.221, train_mse=1.014e+00, train_l2=2.291e+02, test_l2=5.415e+02, test_mse=9.906e-01
+epoch 163 of 300
+ep 163: t=72.875, train_mse=1.014e+00, train_l2=2.355e+02, test_l2=2.871e+02, test_mse=9.910e-01
+epoch 164 of 300
+ep 164: t=73.269, train_mse=1.014e+00, train_l2=8.427e+01, test_l2=5.918e+01, test_mse=9.912e-01
+epoch 165 of 300
+ep 165: t=73.170, train_mse=1.014e+00, train_l2=1.566e+02, test_l2=2.341e+02, test_mse=9.910e-01
+epoch 166 of 300
+ep 166: t=73.348, train_mse=1.014e+00, train_l2=1.808e+02, test_l2=3.341e+01, test_mse=9.913e-01
+epoch 167 of 300
+ep 167: t=73.109, train_mse=1.014e+00, train_l2=1.963e+02, test_l2=1.718e+02, test_mse=9.916e-01
+epoch 168 of 300
+ep 168: t=72.935, train_mse=1.014e+00, train_l2=3.086e+02, test_l2=3.844e+01, test_mse=9.912e-01
+epoch 169 of 300
+ep 169: t=73.058, train_mse=1.014e+00, train_l2=1.626e+02, test_l2=4.402e+01, test_mse=9.913e-01
+epoch 170 of 300
+ep 170: t=72.877, train_mse=1.014e+00, train_l2=1.799e+02, test_l2=2.794e+02, test_mse=9.918e-01
+epoch 171 of 300
+ep 171: t=72.706, train_mse=1.014e+00, train_l2=1.968e+02, test_l2=2.625e+02, test_mse=9.909e-01
+epoch 172 of 300
+ep 172: t=72.577, train_mse=1.014e+00, train_l2=1.191e+02, test_l2=2.460e+02, test_mse=9.909e-01
+epoch 173 of 300
+ep 173: t=72.794, train_mse=1.014e+00, train_l2=1.789e+02, test_l2=2.325e+02, test_mse=9.916e-01
+epoch 174 of 300
+ep 174: t=72.505, train_mse=1.014e+00, train_l2=2.092e+02, test_l2=2.752e+01, test_mse=9.913e-01
+epoch 175 of 300
+ep 175: t=72.531, train_mse=1.014e+00, train_l2=9.575e+01, test_l2=8.642e+01, test_mse=9.911e-01
+epoch 176 of 300
+ep 176: t=72.290, train_mse=1.014e+00, train_l2=7.088e+01, test_l2=5.554e+01, test_mse=9.913e-01
+epoch 177 of 300
+ep 177: t=72.454, train_mse=1.014e+00, train_l2=2.547e+02, test_l2=2.801e+02, test_mse=9.917e-01
+epoch 178 of 300
+ep 178: t=72.387, train_mse=1.014e+00, train_l2=9.298e+01, test_l2=4.122e+01, test_mse=9.912e-01
+epoch 179 of 300
+ep 179: t=72.415, train_mse=1.014e+00, train_l2=1.281e+02, test_l2=1.742e+02, test_mse=9.910e-01
+epoch 180 of 300
+ep 180: t=72.346, train_mse=1.014e+00, train_l2=1.656e+02, test_l2=2.720e+02, test_mse=9.908e-01
+epoch 181 of 300
+ep 181: t=72.201, train_mse=1.014e+00, train_l2=9.791e+01, test_l2=2.172e+02, test_mse=9.909e-01
+epoch 182 of 300
+ep 182: t=72.260, train_mse=1.014e+00, train_l2=1.571e+02, test_l2=2.422e+02, test_mse=9.916e-01
+epoch 183 of 300
+ep 183: t=72.300, train_mse=1.014e+00, train_l2=1.333e+02, test_l2=7.265e+01, test_mse=9.913e-01
+epoch 184 of 300
+ep 184: t=72.569, train_mse=1.014e+00, train_l2=2.022e+02, test_l2=1.576e+02, test_mse=9.914e-01
+epoch 185 of 300
+ep 185: t=72.393, train_mse=1.014e+00, train_l2=6.502e+01, test_l2=2.977e+01, test_mse=9.913e-01
+epoch 186 of 300
+ep 186: t=72.902, train_mse=1.014e+00, train_l2=1.632e+02, test_l2=1.452e+02, test_mse=9.911e-01
+epoch 187 of 300
+ep 187: t=72.515, train_mse=1.014e+00, train_l2=6.144e+01, test_l2=1.786e+01, test_mse=9.912e-01
+epoch 188 of 300
+ep 188: t=72.279, train_mse=1.014e+00, train_l2=1.325e+02, test_l2=1.691e+02, test_mse=9.909e-01
+epoch 189 of 300
+ep 189: t=72.445, train_mse=1.014e+00, train_l2=1.456e+02, test_l2=2.896e+02, test_mse=9.916e-01
+epoch 190 of 300
+ep 190: t=72.562, train_mse=1.014e+00, train_l2=1.645e+02, test_l2=6.446e+00, test_mse=9.912e-01
+epoch 191 of 300
+ep 191: t=73.334, train_mse=1.014e+00, train_l2=1.162e+02, test_l2=4.274e+01, test_mse=9.911e-01
+epoch 192 of 300
+ep 192: t=72.424, train_mse=1.014e+00, train_l2=6.311e+01, test_l2=6.608e+01, test_mse=9.913e-01
+epoch 193 of 300
+ep 193: t=72.566, train_mse=1.014e+00, train_l2=2.061e+02, test_l2=2.367e+02, test_mse=9.915e-01
+epoch 194 of 300
+ep 194: t=72.513, train_mse=1.014e+00, train_l2=6.202e+01, test_l2=3.189e+01, test_mse=9.912e-01
+epoch 195 of 300
+ep 195: t=72.968, train_mse=1.014e+00, train_l2=1.331e+02, test_l2=3.607e+02, test_mse=9.907e-01
+epoch 196 of 300
+ep 196: t=72.474, train_mse=1.014e+00, train_l2=6.162e+01, test_l2=1.938e+01, test_mse=9.911e-01
+epoch 197 of 300
+ep 197: t=72.587, train_mse=1.014e+00, train_l2=1.162e+02, test_l2=1.459e+02, test_mse=9.909e-01
+epoch 198 of 300
+ep 198: t=72.580, train_mse=1.014e+00, train_l2=1.294e+02, test_l2=2.566e+02, test_mse=9.916e-01
+epoch 199 of 300
+ep 199: t=72.926, train_mse=1.014e+00, train_l2=1.168e+02, test_l2=1.348e+02, test_mse=9.914e-01
+epoch 200 of 300
+ep 200: t=72.630, train_mse=1.014e+00, train_l2=5.767e+01, test_l2=1.101e+02, test_mse=9.910e-01
+epoch 201 of 300
+ep 201: t=73.142, train_mse=1.014e+00, train_l2=5.463e+01, test_l2=9.668e+01, test_mse=9.913e-01
+epoch 202 of 300
+ep 202: t=73.069, train_mse=1.014e+00, train_l2=7.320e+01, test_l2=1.433e+02, test_mse=9.913e-01
+epoch 203 of 300
+ep 203: t=72.643, train_mse=1.014e+00, train_l2=1.168e+02, test_l2=4.850e+01, test_mse=9.911e-01
+epoch 204 of 300
+ep 204: t=72.628, train_mse=1.014e+00, train_l2=1.523e+02, test_l2=1.465e+02, test_mse=9.914e-01
+epoch 205 of 300
+ep 205: t=72.811, train_mse=1.014e+00, train_l2=7.027e+01, test_l2=9.059e+00, test_mse=9.911e-01
+epoch 206 of 300
+ep 206: t=72.639, train_mse=1.014e+00, train_l2=1.291e+02, test_l2=1.549e+02, test_mse=9.913e-01
+epoch 207 of 300
+ep 207: t=72.537, train_mse=1.014e+00, train_l2=4.683e+01, test_l2=1.179e+01, test_mse=9.911e-01
+epoch 208 of 300
+ep 208: t=72.565, train_mse=1.014e+00, train_l2=9.954e+01, test_l2=1.082e+02, test_mse=9.909e-01
+epoch 209 of 300
+ep 209: t=72.564, train_mse=1.014e+00, train_l2=1.090e+02, test_l2=1.601e+02, test_mse=9.909e-01
+epoch 210 of 300
+ep 210: t=72.600, train_mse=1.014e+00, train_l2=1.548e+02, test_l2=1.184e+01, test_mse=9.914e-01
+epoch 211 of 300
+ep 211: t=72.312, train_mse=1.014e+00, train_l2=1.903e+02, test_l2=1.893e+02, test_mse=9.913e-01
+epoch 212 of 300
+ep 212: t=72.482, train_mse=1.014e+00, train_l2=1.137e+02, test_l2=4.493e+01, test_mse=9.911e-01
+epoch 213 of 300
+ep 213: t=72.337, train_mse=1.014e+00, train_l2=1.706e+02, test_l2=4.644e+02, test_mse=9.904e-01
+epoch 214 of 300
+ep 214: t=72.473, train_mse=1.014e+00, train_l2=8.153e+01, test_l2=9.713e+00, test_mse=9.911e-01
+epoch 215 of 300
+ep 215: t=72.447, train_mse=1.014e+00, train_l2=8.966e+01, test_l2=1.288e+01, test_mse=9.911e-01
+epoch 216 of 300
+ep 216: t=72.652, train_mse=1.014e+00, train_l2=3.673e+01, test_l2=1.201e+01, test_mse=9.911e-01
+epoch 217 of 300
+ep 217: t=72.632, train_mse=1.014e+00, train_l2=7.317e+01, test_l2=7.611e+01, test_mse=9.910e-01
+epoch 218 of 300
+ep 218: t=72.710, train_mse=1.014e+00, train_l2=4.609e+01, test_l2=2.689e+00, test_mse=9.911e-01
+epoch 219 of 300
+ep 219: t=73.642, train_mse=1.014e+00, train_l2=1.253e+02, test_l2=1.998e+02, test_mse=9.908e-01
+epoch 220 of 300
+ep 220: t=73.142, train_mse=1.014e+00, train_l2=1.060e+02, test_l2=1.589e+02, test_mse=9.908e-01
+epoch 221 of 300
+ep 221: t=72.402, train_mse=1.014e+00, train_l2=5.388e+01, test_l2=1.172e+02, test_mse=9.909e-01
+epoch 222 of 300
+ep 222: t=72.659, train_mse=1.014e+00, train_l2=8.338e+01, test_l2=1.306e+02, test_mse=9.913e-01
+epoch 223 of 300
+ep 223: t=72.429, train_mse=1.014e+00, train_l2=8.140e+01, test_l2=3.170e+01, test_mse=9.911e-01
+epoch 224 of 300
+ep 224: t=72.366, train_mse=1.014e+00, train_l2=5.183e+01, test_l2=9.366e+01, test_mse=9.912e-01
+epoch 225 of 300
+ep 225: t=72.416, train_mse=1.014e+00, train_l2=9.492e+01, test_l2=9.934e+01, test_mse=9.912e-01
+epoch 226 of 300
+ep 226: t=72.377, train_mse=1.014e+00, train_l2=5.889e+01, test_l2=6.175e+01, test_mse=9.911e-01
+epoch 227 of 300
+ep 227: t=72.368, train_mse=1.014e+00, train_l2=7.960e+01, test_l2=9.009e+01, test_mse=9.912e-01
+epoch 228 of 300
+ep 228: t=72.262, train_mse=1.014e+00, train_l2=8.201e+01, test_l2=1.035e+02, test_mse=9.909e-01
+epoch 229 of 300
+ep 229: t=72.293, train_mse=1.014e+00, train_l2=8.316e+01, test_l2=3.846e+01, test_mse=9.911e-01
+epoch 230 of 300
+ep 230: t=72.559, train_mse=1.014e+00, train_l2=1.091e+02, test_l2=5.213e+01, test_mse=9.909e-01
+epoch 231 of 300
+ep 231: t=72.588, train_mse=1.014e+00, train_l2=9.319e+01, test_l2=5.878e+01, test_mse=9.911e-01
+epoch 232 of 300
+ep 232: t=72.643, train_mse=1.014e+00, train_l2=8.526e+01, test_l2=1.174e+02, test_mse=9.912e-01
+epoch 233 of 300
+ep 233: t=72.483, train_mse=1.014e+00, train_l2=7.871e+01, test_l2=1.240e+02, test_mse=9.908e-01
+epoch 234 of 300
+ep 234: t=72.585, train_mse=1.014e+00, train_l2=4.324e+01, test_l2=9.194e+01, test_mse=9.909e-01
+epoch 235 of 300
+ep 235: t=72.460, train_mse=1.014e+00, train_l2=6.493e+01, test_l2=1.065e+02, test_mse=9.912e-01
+epoch 236 of 300
+ep 236: t=72.384, train_mse=1.014e+00, train_l2=6.403e+01, test_l2=1.169e+02, test_mse=9.909e-01
+epoch 237 of 300
+ep 237: t=72.593, train_mse=1.014e+00, train_l2=6.633e+01, test_l2=7.828e+01, test_mse=9.911e-01
+epoch 238 of 300
+ep 238: t=72.541, train_mse=1.014e+00, train_l2=7.422e+01, test_l2=7.834e+01, test_mse=9.911e-01
+epoch 239 of 300
+ep 239: t=72.628, train_mse=1.014e+00, train_l2=8.309e+01, test_l2=4.149e+01, test_mse=9.910e-01
+epoch 240 of 300
+ep 240: t=72.664, train_mse=1.014e+00, train_l2=5.253e+01, test_l2=6.187e+00, test_mse=9.910e-01
+epoch 241 of 300
+ep 241: t=72.463, train_mse=1.014e+00, train_l2=5.718e+01, test_l2=5.949e+01, test_mse=9.911e-01
+epoch 242 of 300
+ep 242: t=72.472, train_mse=1.014e+00, train_l2=5.987e+01, test_l2=6.000e+01, test_mse=9.911e-01
+epoch 243 of 300
+ep 243: t=72.525, train_mse=1.014e+00, train_l2=5.391e+01, test_l2=4.203e+01, test_mse=9.911e-01
+epoch 244 of 300
+ep 244: t=72.960, train_mse=1.014e+00, train_l2=2.277e+01, test_l2=1.512e+00, test_mse=9.910e-01
+epoch 245 of 300
+ep 245: t=72.934, train_mse=1.014e+00, train_l2=5.030e+01, test_l2=2.945e+01, test_mse=9.911e-01
+epoch 246 of 300
+ep 246: t=72.506, train_mse=1.014e+00, train_l2=2.286e+01, test_l2=8.899e+00, test_mse=9.910e-01
+epoch 247 of 300
+ep 247: t=72.259, train_mse=1.014e+00, train_l2=4.850e+01, test_l2=5.146e+01, test_mse=9.909e-01
+epoch 248 of 300
+ep 248: t=72.475, train_mse=1.014e+00, train_l2=5.251e+01, test_l2=6.888e+01, test_mse=9.909e-01
+epoch 249 of 300
+ep 249: t=72.440, train_mse=1.014e+00, train_l2=7.542e+01, test_l2=1.144e+02, test_mse=9.908e-01
+epoch 250 of 300
+ep 250: t=72.544, train_mse=1.014e+00, train_l2=4.698e+01, test_l2=3.618e+00, test_mse=9.910e-01
+epoch 251 of 300
+ep 251: t=72.428, train_mse=1.014e+00, train_l2=6.783e+01, test_l2=9.351e+00, test_mse=9.910e-01
+epoch 252 of 300
+ep 252: t=72.661, train_mse=1.014e+00, train_l2=2.186e+01, test_l2=3.391e+01, test_mse=9.910e-01
+epoch 253 of 300
+ep 253: t=72.656, train_mse=1.014e+00, train_l2=2.845e+01, test_l2=6.398e+01, test_mse=9.909e-01
+epoch 254 of 300
+ep 254: t=72.527, train_mse=1.014e+00, train_l2=4.324e+01, test_l2=7.057e+01, test_mse=9.911e-01
+epoch 255 of 300
+ep 255: t=72.459, train_mse=1.014e+00, train_l2=4.238e+01, test_l2=7.294e+01, test_mse=9.909e-01
+epoch 256 of 300
+ep 256: t=72.428, train_mse=1.014e+00, train_l2=4.159e+01, test_l2=5.682e+01, test_mse=9.911e-01
+epoch 257 of 300
+ep 257: t=72.452, train_mse=1.014e+00, train_l2=3.804e+01, test_l2=6.119e+00, test_mse=9.910e-01
+epoch 258 of 300
+ep 258: t=72.479, train_mse=1.014e+00, train_l2=5.688e+01, test_l2=2.556e+01, test_mse=9.910e-01
+epoch 259 of 300
+ep 259: t=72.425, train_mse=1.014e+00, train_l2=4.145e+01, test_l2=5.875e+01, test_mse=9.911e-01
+epoch 260 of 300
+ep 260: t=72.500, train_mse=1.014e+00, train_l2=3.891e+01, test_l2=5.014e+01, test_mse=9.911e-01
+epoch 261 of 300
+ep 261: t=72.527, train_mse=1.014e+00, train_l2=3.697e+01, test_l2=6.491e+00, test_mse=9.910e-01
+epoch 262 of 300
+ep 262: t=72.427, train_mse=1.014e+00, train_l2=3.344e+01, test_l2=3.431e+01, test_mse=9.909e-01
+epoch 263 of 300
+ep 263: t=72.312, train_mse=1.014e+00, train_l2=3.161e+01, test_l2=1.137e+00, test_mse=9.910e-01
+epoch 264 of 300
+ep 264: t=72.527, train_mse=1.014e+00, train_l2=3.495e+01, test_l2=3.008e+01, test_mse=9.910e-01
+epoch 265 of 300
+ep 265: t=72.466, train_mse=1.014e+00, train_l2=1.423e+01, test_l2=1.013e+00, test_mse=9.910e-01
+epoch 266 of 300
+ep 266: t=72.450, train_mse=1.014e+00, train_l2=3.474e+01, test_l2=1.026e+00, test_mse=9.910e-01
+epoch 267 of 300
+ep 267: t=72.574, train_mse=1.014e+00, train_l2=1.274e+01, test_l2=3.836e+00, test_mse=9.910e-01
+epoch 268 of 300
+ep 268: t=72.343, train_mse=1.014e+00, train_l2=2.873e+01, test_l2=2.684e+01, test_mse=9.910e-01
+epoch 269 of 300
+ep 269: t=72.390, train_mse=1.014e+00, train_l2=1.544e+01, test_l2=2.585e+00, test_mse=9.910e-01
+epoch 270 of 300
+ep 270: t=72.464, train_mse=1.014e+00, train_l2=2.322e+01, test_l2=2.898e+01, test_mse=9.910e-01
+epoch 271 of 300
+ep 271: t=72.300, train_mse=1.014e+00, train_l2=2.887e+01, test_l2=3.625e+01, test_mse=9.909e-01
+epoch 272 of 300
+ep 272: t=72.319, train_mse=1.014e+00, train_l2=4.113e+01, test_l2=5.775e+01, test_mse=9.909e-01
+epoch 273 of 300
+ep 273: t=72.270, train_mse=1.014e+00, train_l2=3.226e+01, test_l2=4.112e+01, test_mse=9.909e-01
+epoch 274 of 300
+ep 274: t=72.379, train_mse=1.014e+00, train_l2=1.739e+01, test_l2=2.568e+01, test_mse=9.910e-01
+epoch 275 of 300
+ep 275: t=72.403, train_mse=1.014e+00, train_l2=1.998e+01, test_l2=1.893e+00, test_mse=9.910e-01
+epoch 276 of 300
+ep 276: t=72.427, train_mse=1.014e+00, train_l2=3.371e+01, test_l2=1.033e+01, test_mse=9.910e-01
+epoch 277 of 300
+ep 277: t=72.629, train_mse=1.014e+00, train_l2=1.034e+01, test_l2=1.103e+01, test_mse=9.910e-01
+epoch 278 of 300
+ep 278: t=72.719, train_mse=1.014e+00, train_l2=3.113e+01, test_l2=8.361e+00, test_mse=9.910e-01
+epoch 279 of 300
+ep 279: t=72.661, train_mse=1.014e+00, train_l2=1.012e+01, test_l2=1.247e+01, test_mse=9.910e-01
+epoch 280 of 300
+ep 280: t=72.584, train_mse=1.014e+00, train_l2=2.893e+01, test_l2=5.808e+00, test_mse=9.910e-01
+epoch 281 of 300
+ep 281: t=72.697, train_mse=1.014e+00, train_l2=9.529e+00, test_l2=1.358e+01, test_mse=9.910e-01
+epoch 282 of 300
+ep 282: t=72.402, train_mse=1.014e+00, train_l2=2.682e+01, test_l2=3.585e+00, test_mse=9.910e-01
+epoch 283 of 300
+ep 283: t=72.302, train_mse=1.014e+00, train_l2=8.951e+00, test_l2=1.444e+01, test_mse=9.910e-01
+epoch 284 of 300
+ep 284: t=72.467, train_mse=1.014e+00, train_l2=1.148e+01, test_l2=2.501e+01, test_mse=9.910e-01
+epoch 285 of 300
+ep 285: t=72.599, train_mse=1.014e+00, train_l2=1.692e+01, test_l2=2.842e+01, test_mse=9.910e-01
+epoch 286 of 300

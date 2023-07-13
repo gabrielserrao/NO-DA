@@ -185,9 +185,9 @@ class ReadXarray():
 #
 #################################################
 # 
-class GaussianNormalizer(object):
+class FullGaussianNormalizer(object):
     def __init__(self, x, eps=0.00001, time_last=True):
-        super(UnitGaussianNormalizer, self).__init__()
+        super(FullGaussianNormalizer, self).__init__()
 
         self.mean = torch.mean(x, dim=(0, 1, 2))
         self.std = torch.std(x, dim=(0, 1, 2))
@@ -204,14 +204,15 @@ class GaussianNormalizer(object):
         x = (x * std) + mean
         return x
     
-class UnitGaussianNormalizer(object):
-    def __init__(self, x, mean=None, std=None, eps=0.00001):
-        super(UnitGaussianNormalizer, self).__init__()
-        
+class GaussianNormalizer(object):
+    def __init__(self, dataloader, mean=None, std=None, is_label=False, eps=0.00001):
+        super(GaussianNormalizer, self).__init__()        
         # If mean and std are provided, use them. Otherwise, compute from data.
         if mean is None or std is None:
-            self.mean = torch.mean(x, dim=(0, 1, 2))
-            self.std = torch.std(x, dim=(0, 1, 2))
+            for data, labels in dataloader:
+                data = labels if is_label else data  # if this is label normalizer, normalize labels
+                self.mean = torch.mean(data, dim=(0, 1, 2, 3))
+                self.std = torch.std(data, dim=(0, 1, 2, 3))
         else:
             self.mean = mean
             self.std = std
@@ -227,9 +228,12 @@ class UnitGaussianNormalizer(object):
         x = (x * std) + mean
         return x
     
-    def decode_with_values(self, x, mean, std):
-        x = (x * std) + mean
-        return x
+    def cuda(self, device):
+        self.mean = self.mean.to(device)
+        self.std = self.std.to(device)
+        return self 
+    
+
     
 # normalization, pointwise gaussian
 class PointGaussianNormalizer(object):
@@ -317,8 +321,57 @@ class PointMinMaxNormalizer(object):
         self.min_val = self.min_val.to(device)
         self.max_val = self.max_val.to(device)
         return self
+class PointGaussianNormalizerNoNaN(object):
+    def __init__(self, dataloader, mean=None, std=None, is_label=False, eps=0.00001):
+        super(PointGaussianNormalizerNoNaN, self).__init__()
+        self.eps = eps
+        if mean is None or std is None:
+            self.mean, self.std = self.batch_mean_and_sd(dataloader, is_label)
+        else:
+            self.mean = mean
+            self.std = std
 
+    def batch_mean_and_sd(self, loader, is_label, default_value=0):
+        cnt = 0
+        fst_moment = None
+        snd_moment = None
 
+        for data, labels in loader:
+            data = labels if is_label else data
+            data_shape = data.shape[-1]
+            if fst_moment is None:
+                fst_moment = torch.zeros(data_shape)
+                snd_moment = torch.zeros(data_shape)
+
+            b, t, h, w, c = data.shape
+            nb_pixels = b * t * h * w
+
+            # Replace NaN values with a default value
+            data = torch.where(torch.isnan(data), torch.tensor(default_value), data)
+
+            sum_ = torch.sum(data, dim=[0, 1, 2, 3])
+            sum_of_square = torch.sum(data ** 2, dim=[0, 1, 2, 3])
+
+            cnt += nb_pixels
+
+            fst_moment += sum_
+            snd_moment += sum_of_square
+
+        fst_moment /= cnt
+        snd_moment /= cnt
+
+        return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
+
+    def encode(self, x):
+        return (x - self.mean) / (self.std + self.eps)
+
+    def decode(self, x):
+        return x * (self.std + self.eps) + self.mean
+
+    def cuda(self, device):
+        self.mean = self.mean.to(device)
+        self.std = self.std.to(device)
+        return self
 
 
 
