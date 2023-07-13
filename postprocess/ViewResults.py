@@ -2,6 +2,8 @@
 import sys
 sys.path.append("..")
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.patches as mpatches
 import pandas as pd
 import re
 import numpy as np
@@ -22,25 +24,23 @@ print(os.getcwd())
 ###############################################
 #INTIAL CONFIGS
 # DATASET
-FOLDER = "../dataset/mixedcontext32x32"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+TAG = 'MonthQgWellRand'
+FOLDER = '../dataset/DARTS/runnedmodels_wells/filtered' #'/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"../dataset/DARTS/runnedmodels_wells/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 OUTPUT_VARS = ['Pressure'] 
-
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
-
-TAG = '_'
-NUM_FILES= 200
+NUM_FILES= 1000
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 10
-EPOCHS = 100
-MODES = 12
+EPOCHS = 300
+MODES = 18
 WIDTH = 128
-
+NORMALIZER = 'PointGaussianNormalizerNoNaN'
+WELLS_POSITIONS = True
 #List of samples to plot:
 BATCH_TO_PLOT = [0]
 SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
@@ -53,16 +53,16 @@ plot_gifs =True
 variable = OUTPUT_VARS[0]
 ntrain = NUM_FILES * TRAINTEST_SPLIT
 ntest = NUM_FILES - ntrain
-path = 'FNO_3d{}_N{}_ep{}_m{}_w{}_b{}'.format(TAG,ntrain, EPOCHS, MODES, WIDTH, BATCH_SIZE)
+
+path = 'FNO_3d_{}_N{}_ep{}_m{}_w{}_b{}_norm{}'.format(TAG,ntrain, EPOCHS, MODES, WIDTH, BATCH_SIZE, NORMALIZER)
 path += '_INPUT_' + '_'.join(INPUT_VARS) + '_OUTPUT_' + '_'.join(OUTPUT_VARS)
+#path = '/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_N800.0_ep200_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_CO_2'
 path_runs = os.path.join(BASE_PATH, path)
 path_model = os.path.join(path_runs, f'{path}_model.pt')
+#path_model='/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_N800.0_ep200_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_CO_2/FNO_3d_N800.0_ep200_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_CO_2_model.pt'
 path_normalizer = path_runs
 image_folder = os.path.join(path_runs, 'images')
 log_folder = os.path.join(path_runs, 'log')
-
-if not os.path.exists(image_folder):
-    os.makedirs(image_folder)
 
 #check  all paths
 print(f'Path runs: {path_runs}')
@@ -76,6 +76,9 @@ if not os.path.exists(path_model):
 if not os.path.exists(image_folder):
     raise ValueError(f'Path {image_folder} does not exist.')
 
+if not os.path.exists(image_folder):
+    os.makedirs(image_folder)
+
 
 if variable == 'CO_2':
     colorbar_vmax, colorbar_vmin = 1.0, 0.0 # Define your min and max here
@@ -87,7 +90,7 @@ elif variable == 'Pressure':
 #LOAD DATA
 
 # Create instance of ReadXarrayDatasetNorm class for training data
-dataset = ReadXarrayDataset(folder=FOLDER, input_vars=INPUT_VARS, output_vars=OUTPUT_VARS, num_files = NUM_FILES, wells_positions=False)
+dataset = ReadXarrayDataset(folder=FOLDER, input_vars=INPUT_VARS, output_vars=OUTPUT_VARS, num_files = NUM_FILES, wells_positions=WELLS_POSITIONS)
 
 train_size = int(TRAINTEST_SPLIT * len(dataset))
 test_size = len(dataset) - train_size
@@ -101,9 +104,6 @@ test_loader = DataLoader(torch.utils.data.Subset(dataset, range(train_size, trai
                          shuffle=False)
 # We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
 
-input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
-output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
-
 # %%
 #LOAD NORMALIZATION PARAMETERS
 
@@ -115,13 +115,16 @@ if os.path.exists(os.path.join(path_runs,'normalizer_mean_input.pt')):
     output_normalizer_mean = torch.load(os.path.join(path_runs,'normalizer_mean_output.pt'))
     output_normalizer_std = torch.load(os.path.join(path_runs,'normalizer_std_output.pt'))
     print('Normalizer loaded')
-    input_normalizer = PointGaussianNormalizer(train_loader, mean = input_normalizer_mean, std = input_normalizer_std, is_label=False)
-    output_normalizer = PointGaussianNormalizer(train_loader, mean = output_normalizer_mean, std = output_normalizer_std, is_label=True)
+    #create a new normalizer
+    if NORMALIZER == 'PointGaussianNormalizerNoNaN':
+        input_normalizer = PointGaussianNormalizerNoNaN(train_loader, mean = input_normalizer_mean, std = input_normalizer_std, is_label=False)
+        output_normalizer = PointGaussianNormalizerNoNaN(train_loader, mean = output_normalizer_mean, std = output_normalizer_std, is_label=True)
+    elif NORMALIZER == 'PointGaussianNormalizer':
+        input_normalizer = PointGaussianNormalizer(train_loader, mean = input_normalizer_mean, std = input_normalizer_std, is_label=False)
+        output_normalizer = PointGaussianNormalizer(train_loader, mean = output_normalizer_mean, std = output_normalizer_std, is_label=True)
 
     input_normalizer = input_normalizer.cuda(device)
     output_normalizer = output_normalizer.cuda(device)
-
-
 
 else:
     print('Normalizer not found')
@@ -175,7 +178,7 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test L2 values')
     ax1.legend()
-    plt.savefig(os.path.join(log_folder, f'{path_runs}_model_eval_L2.png'))
+    plt.savefig(os.path.join(log_folder, f'model_eval_L2.png'))
 
         # Create figure and axis
     fig, ax1 = plt.subplots()
@@ -189,7 +192,7 @@ if plot_model_eval:
     ax1.set_ylabel('Value')
     ax1.set_title('Comparison of Train and Test MSE values')
     ax1.legend()
-    plt.savefig(os.path.join(log_folder, f'{path_runs}_model_eval_MSE.png'))
+    plt.savefig(os.path.join(log_folder, f'model_eval_MSE.png'))
 
 
 
@@ -312,6 +315,8 @@ if EVALUATE_METRICS:
 #%%   
 
 #%%
+predicted_distances = []
+true_distances = []
 for batch_idx, (x, y) in enumerate(test_loader):        
         if batch_idx in BATCH_TO_PLOT:
             #check if batch_idx is in samples to plot
@@ -352,6 +357,94 @@ for batch_idx, (x, y) in enumerate(test_loader):
                     plt.savefig(os.path.join(image_folder, f"comparison_{sample+1}.png"))
                     print(f"Comparison_{sample+1}.png saved")
                     plt.close() 
+
+                    data = predicted_y[-1, :, :, 0].numpy()
+                    true_data = test_y[-1, :, :, 0].numpy()
+                    
+                    X, Y = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
+                    flat_data  = data.flatten()
+                    data_threshold = np.percentile(flat_data, 90)
+                    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+                    # Plot for predicted data
+                    contourf0 = axs[0].contourf(X, Y, data, levels=50, cmap='viridis')  # Use 50 levels for detailed gradients
+
+                    # Draw the threshold contour if it exists in the data range
+                    if np.min(data) <= data_threshold <= np.max(data):
+                        contour0 = axs[0].contour(X, Y, data, levels=[data_threshold], colors='red')
+                        # Add the threshold value as a label to the contour line
+                        axs[0].clabel(contour0, inline=True, fontsize=8)
+
+                    axs[0].set_title(f'Contour Plot of Predicted {variable} at last time step for Sample {sample+1}')
+                    axs[0].set_xlabel('x')
+                    axs[0].set_ylabel('y')
+
+                    # Plot for true data
+                    contourf1 = axs[1].contourf(X, Y, true_data, levels=50, cmap='viridis')  # Use 50 levels for detailed gradients
+
+                    # Draw the threshold contour if it exists in the data range
+                    if np.min(true_data) <= data_threshold <= np.max(true_data):
+                        contour1 = axs[1].contour(X, Y, true_data, levels=[data_threshold], colors='red')
+                        # Add the threshold value as a label to the contour line
+                        axs[1].clabel(contour1, inline=True, fontsize=8)
+
+                    axs[1].set_title(f'Contour Plot of True {variable} at last time step for Sample {sample+1}')
+                    axs[1].set_xlabel('x')
+                    axs[1].set_ylabel('y')
+
+                    plt.tight_layout()
+                    plt.colorbar(contourf1)  # Use the colorbar from the true data plot
+                    plt.savefig(os.path.join(image_folder, f"contour_{sample+1}.png"))
+                    plt.show()
+                    plt.close()
+
+                    try: 
+                        fig, ax = plt.subplots(figsize=(9, 7))
+
+                        max_val_pos_data = np.unravel_index(data.argmax(), data.shape)
+                        max_val_pos_true_data = np.unravel_index(true_data.argmax(), true_data.shape)
+
+
+                        # Draw the background data (true data)
+                        contourf = ax.imshow(true_data, cmap='viridis', alpha=0.5, extent=[X.min(), X.max(), Y.min(), Y.max()], origin='lower')
+
+                        # Draw the contour lines for the predicted and true data
+                        contour_pred = ax.contour(X, Y, data, levels=[data_threshold], colors='red')
+                        contour_true = ax.contour(X, Y, true_data, levels=[data_threshold], colors='blue')
+
+                        # Create a legend manually with proxy artists
+                        import matplotlib.lines as mlines
+                        # Draw the contour lines for the predicted and true data
+                        contour_pred = ax.contour(X, Y, data, levels=[data_threshold], colors='red')
+                        contour_true = ax.contour(X, Y, true_data, levels=[data_threshold], colors='blue')
+
+                        # Create a legend manually with patches
+                    
+                        red_patch = mpatches.Patch(color='red', label='Predicted')
+                        blue_patch = mpatches.Patch(color='blue', label='True')
+                        ax.legend(handles=[red_patch, blue_patch])
+
+
+                        # Compute the distances and display them as annotations
+                        dist_data = np.min(np.sqrt((max_val_pos_data[0]-contour_pred.allsegs[0][0][:,1])**2 + (max_val_pos_data[1]-contour_pred.allsegs[0][0][:,0])**2))
+                        dist_true_data = np.min(np.sqrt((max_val_pos_true_data[0]-contour_true.allsegs[0][0][:,1])**2 + (max_val_pos_true_data[1]-contour_true.allsegs[0][0][:,0])**2))
+                        ax.annotate(f'Min Distance (Pred): {dist_data:.2f}', (0.05, 0.95), xycoords='axes fraction', backgroundcolor='white')
+                        ax.annotate(f'Min Distance (True): {dist_true_data:.2f}', (0.05, 0.85), xycoords='axes fraction', backgroundcolor='white')
+                        predicted_distances.append(dist_data)
+                        true_distances.append(dist_true_data)
+
+                        # Set the title
+                        ax.set_title('Overlay of True and Predicted Contours')
+
+                        plt.tight_layout()
+                        plt.colorbar(contourf, ax=ax)  # Use the colorbar from the true data plot
+                        plt.savefig(os.path.join(image_folder, f"contour_overlay_{sample+1}.png"))
+                        plt.show()
+
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+
+
             
                     if plot_lines:
                         resolution  = test_y.shape[1]
@@ -411,4 +504,55 @@ for batch_idx, (x, y) in enumerate(test_loader):
 
                         gif_paths.append(gif_save_path)
 
+# %%
+plot_histogram_distances =True
+# if plot_histogram_distances:
+#     for batch_idx, (x, y) in enumerate(test_loader): 
+
+#         #check if batch_idx is in samples to plot
+#         x = x.to(device)
+#         true_y = y.to(device)
+#         x = input_normalizer.encode(x)
+#         out = model(x)
+#         out = output_normalizer.decode(out)
+#         num_samples = x.size(0)          
+#         for index in range(BATCH_SIZE):
+#             sample = batch_idx * BATCH_SIZE + index
+#             test_y = true_y[index,...].detach().cpu()
+#             predicted_y = out[index,...].detach().cpu()
+#             data = predicted_y[-1, :, :, 0].numpy()
+#             true_data = test_y[-1, :, :, 0].numpy()
+            
+#             X, Y = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
+#             flat_data  = data.flatten()
+#             data_threshold = np.percentile(flat_data, 90)    
+
+
+#             max_val_pos_data = np.unravel_index(data.argmax(), data.shape)
+#             max_val_pos_true_data = np.unravel_index(true_data.argmax(), true_data.shape)
+#             # Draw the contour lines for the predicted and true data
+#             contour_pred = ax.contour(X, Y, data, levels=[data_threshold], colors='red')
+#             contour_true = ax.contour(X, Y, true_data, levels=[data_threshold], colors='blue')
+#             dist_data = np.min(np.sqrt((max_val_pos_data[0]-contour_pred.allsegs[0][0][:,1])**2 + (max_val_pos_data[1]-contour_pred.allsegs[0][0][:,0])**2))
+#             dist_true_data = np.min(np.sqrt((max_val_pos_true_data[0]-contour_true.allsegs[0][0][:,1])**2 + (max_val_pos_true_data[1]-contour_true.allsegs[0][0][:,0])**2))
+            
+#             predicted_distances.append(dist_data)
+#             true_distances.append(dist_true_data)
+# #%%
+# # Create a histogram of predicted distances
+# plt.hist(predicted_distances, bins=20, alpha=0.5, label='Predicted Distances')
+
+# # Create a histogram of true distances
+# plt.hist(true_distances, bins=20, alpha=0.5, label='True Distances')
+
+# # Set the labels and title of the plot
+# plt.xlabel('Max Distance')
+# plt.ylabel('Frequency')
+# plt.title('Histogram of Predicted and True Max Distances')
+
+# # Add a legend
+# plt.legend()
+
+# # Show the plot
+# plt.show()
 # %%
