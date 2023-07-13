@@ -25,16 +25,16 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 tag = 'MonthQgWellCenter' 
-folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
-output_vars = ['CO_2'] 
+output_vars = ['Pressure'] 
 num_files= 1000
 traintest_split = 0.8
-batch_size = 10
-normalizer = 'PointGaussianNormalizerNoNaN'
+batch_size = 1
+normalizer = 'PointGaussianNormalizer'
 WELLS_POSITIONS = True
 learning_rate = 0.001
-epochs = 300
+epochs = 100
 modes = 18
 width = 128
 
@@ -95,7 +95,7 @@ t2 = default_timer()
 #%%
 # We no longer have the entire dataset loaded into memory. The normalization is handled by the Dataset class.
 
-if normalizer == 'PointGaussian':
+if normalizer == 'PointGaussianNormalizer':
     input_normalizer = PointGaussianNormalizer(train_loader, is_label=False)
     output_normalizer = PointGaussianNormalizer(train_loader, is_label=True)
 
