@@ -28,14 +28,14 @@ tag = 'MonthQgWellCenter'
 folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['Pressure'] 
-num_files= 1000
+num_files= 200
 traintest_split = 0.8
 batch_size = 1
 normalizer = 'PointGaussianNormalizer'
 WELLS_POSITIONS = True
 learning_rate = 0.001
 epochs = 100
-modes = 18
+modes = 6
 width = 128
 
 ntrain = num_files*traintest_split
