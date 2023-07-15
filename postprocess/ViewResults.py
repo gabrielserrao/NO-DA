@@ -32,19 +32,19 @@ OUTPUT_VARS = ['Pressure']
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
 NUM_FILES= 1000
 TRAINTEST_SPLIT = 0.8
-BATCH_SIZE = 10
-EPOCHS = 300
+BATCH_SIZE = 1
+EPOCHS = 100
 MODES = 18
 WIDTH = 128
-NORMALIZER = 'PointGaussianNormalizerNoNaN'
+NORMALIZER = 'PointGaussianNormalizer'
 WELLS_POSITIONS = True
 #List of samples to plot:
-BATCH_TO_PLOT = [0]
-SAMPLES_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+BATCH_TO_PLOT = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+SAMPLES_TO_PLOT = [0]#, 1, 2, 3, 4, 5, 6, 7, 8]
 #DEVICE SETTINGS
 device = 'cpu'
 #OUTPUT CONFIGURATION
-EVALUATE_METRICS = True
+EVALUATE_METRICS = False
 plot_model_eval = True
 plot_comparison = True
 plot_lines =True
@@ -83,7 +83,7 @@ if not os.path.exists(image_folder):
 if variable == 'CO_2':
     colorbar_vmax, colorbar_vmin = 1.0, 0.0 # Define your min and max here
 elif variable == 'Pressure':
-    colorbar_vmin, colorbar_vmax = 200.0, 600.0 # Define your min and max here
+    colorbar_vmin, colorbar_vmax = 200.0, 300.0 # Define your min and max here
   # Change this to the index you want
 #%%     
 ###############################################
@@ -308,11 +308,6 @@ if EVALUATE_METRICS:
     plt.savefig(os.path.join(log_folder, 'mse_vs_connectivity.jpg'))
     plt.close()
 
-
-
-
-
-#%%   
 
 #%%
 predicted_distances = []
