@@ -24,7 +24,7 @@ print(os.getcwd())
 torch.manual_seed(1)
 np.random.seed(1)
 
-tag = 'MonthQgWellCenter' 
+tag = 'MonthQgWellCenter_TESTE' 
 folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['Pressure'] 
