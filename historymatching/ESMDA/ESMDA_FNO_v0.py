@@ -65,7 +65,7 @@ Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
 NeHf = 100 #ensemble members for the High Fidelity foward model
-NePx = 900 #ensemble members for the Proxy
+NePx = 0 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
 
 
@@ -167,13 +167,14 @@ for alpha in alphas:
             is_proxy = False,
             )
         #runs proxy
-        run_forward(reference_folder,
-                    data_folder = geoDir,
-                    numberHFmembers=NeHf,
-                    Ne = Ne,
-                    output_folder=dynDir,
-                    is_proxy = True,
-                    )
+        if NePx > 0:
+            run_forward(reference_folder,
+                        data_folder = geoDir,
+                        numberHFmembers=NeHf,
+                        Ne = Ne,
+                        output_folder=dynDir,
+                        is_proxy = True,
+                        )
         
     else:
     #read MGrid from the previous iteration
@@ -210,13 +211,14 @@ for alpha in alphas:
             is_proxy = False,
             )
         #runs proxy
-        run_forward(reference_folder,
-                    data_folder = geoDir,
-                    numberHFmembers=NeHf,
-                    Ne = Ne,
-                    output_folder=dynDir,
-                    is_proxy = True,
-                    )
+        if NePx > 0:
+            run_forward(reference_folder,
+                        data_folder = geoDir,
+                        numberHFmembers=NeHf,
+                        Ne = Ne,
+                        output_folder=dynDir,
+                        is_proxy = True,
+                        )
     D = compute_observation_matrix(dynDir, Ne, monitoring_positions)
     pd.DataFrame(D).to_pickle(f'{destDir}/D_{l}.pkl')    
     DobsD = DPObs - D
