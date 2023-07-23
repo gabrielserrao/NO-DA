@@ -64,8 +64,8 @@ NScalar = 0 #we are not considering any scalar parameters in the problem like kr
 Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
-NeHf = 100 #ensemble members for the High Fidelity foward model
-NePx = 0 #ensemble members for the Proxy
+NeHf = 0 #ensemble members for the High Fidelity foward model
+NePx = 1000 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
 
 
@@ -131,7 +131,7 @@ for alpha in alphas:
     
     prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/prior_geomodels'
 
-    destDir= os.path.join(curDir,f'simulations/it{l}')
+    destDir= os.path.join(curDir,f'simulations_Px/it{l}')
     geoDir= os.path.join(destDir,f'geo')
     dynDir= os.path.join(destDir,f'dyn')  
     if not os.path.exists(destDir):
@@ -158,15 +158,15 @@ for alpha in alphas:
                 MGrid = MGridPrior
                 
 
-         
-        run_forward(reference_folder,
-            data_folder = geoDir,
-            numberHFmembers =NeHf,
-            Ne = Ne,
-            output_folder=dynDir,
-            is_proxy = False,
-            )
-        #runs proxy
+        if NeHf > 0:         
+            run_forward(reference_folder,
+                data_folder = geoDir,
+                numberHFmembers =NeHf,
+                Ne = Ne,
+                output_folder=dynDir,
+                is_proxy = False,
+                )
+            #runs proxy
         if NePx > 0:
             run_forward(reference_folder,
                         data_folder = geoDir,
@@ -178,10 +178,10 @@ for alpha in alphas:
         
     else:
     #read MGrid from the previous iteration
-        destDir= os.path.join(curDir,f'simulations/it{l-1}')
+        destDir= os.path.join(curDir,f'simulations_Px/it{l-1}')
         MGrid = pd.read_pickle(f'{destDir}/MGrid_{l-1}.pkl') 
         MGrid = MGrid.values
-        destDir= os.path.join(curDir,f'simulations/it{l}')  
+        destDir= os.path.join(curDir,f'simulations_Px/it{l}')  
         geoDir= os.path.join(destDir,f'geo')
         dynDir= os.path.join(destDir,f'dyn')    
         for i, file in enumerate(os.listdir(prior_path)):
@@ -202,14 +202,15 @@ for alpha in alphas:
             
         print('Running...')
 
+        if NeHf > 0:
         #runs DARTS
-        run_forward(reference_folder,
-            data_folder = geoDir,
-            numberHFmembers =NeHf,
-            Ne = Ne,
-            output_folder=dynDir,
-            is_proxy = False,
-            )
+            run_forward(reference_folder,
+                data_folder = geoDir,
+                numberHFmembers =NeHf,
+                Ne = Ne,
+                output_folder=dynDir,
+                is_proxy = False,
+                )
         #runs proxy
         if NePx > 0:
             run_forward(reference_folder,
