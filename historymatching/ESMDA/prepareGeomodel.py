@@ -13,7 +13,7 @@ Ne = 1000
 treatGeoModel = False
 i = 0
 for model in os.listdir(GeoFolder):
-    while i < Ne:
+    if i < Ne:
         geomodel = xr.open_dataset(os.path.join(GeoFolder, model))
         if treatGeoModel == True:
             factor = 1.01324997e12
@@ -24,8 +24,8 @@ for model in os.listdir(GeoFolder):
             #Set the minimum value of Por to 0.01
             geomodel['Por'] = geomodel['Por'].where(geomodel['Por'] >= 0.01, 0.01)
 
-        prior['Perm'] = geomodel['Perm']
-        prior['Por'] = geomodel['Por']
+        prior['Perm'].values = geomodel['Perm'].values
+        prior['Por'].values = geomodel['Por'].values
         #save prior to netcdf on the folder
         prior.to_netcdf(f'{prior_geomodels_path}/prior_{i}.nc')
         i += 1

@@ -16,17 +16,20 @@ def run_proxy(data_folder,
                 output_vars = ['Pressure'],
                 WELLS_POSITIONS = True,
                 device = 'cuda',  # Use GPU
-                output_folder = '.'):
+                output_folder = '.',
+                Ne=100):
         
         folder = os.path.dirname(path_model)       
         batch_size = 1  # Use batch size of 1
-        num_files = len(os.listdir(data_folder))
+        num_files = Ne
 
         dataset = ReadXarrayDataset(folder=data_folder, 
                                 input_vars=input_vars, 
-                                output_vars=output_vars[0],
+                                output_vars=output_vars,
                                 num_files = num_files, 
-                                wells_positions=WELLS_POSITIONS)
+                                wells_positions=WELLS_POSITIONS
+                                )
+        
         data_loader = DataLoader(dataset, 
                             batch_size=batch_size,
                             shuffle=False) 
@@ -50,8 +53,8 @@ def run_proxy(data_folder,
                                                 std = output_normalizer_std, 
                                                 is_label=True)
 
-        input_normalizer = input_normalizer.to(device)
-        output_normalizer = output_normalizer.to(device)
+        input_normalizer = input_normalizer.cuda(device)
+        output_normalizer = output_normalizer.cuda(device)
 
         model = torch.load(path_model)
         model.to(device)
@@ -68,10 +71,14 @@ def run_proxy(data_folder,
             out = model(x)
             out = output_normalizer.decode(out)
             out = out.detach().cpu().numpy()  
+            print(f'Proxy simulation {global_count} completed!')
 
             for o in out:       
                 o = np.squeeze(o)
                 data_array = xr.DataArray(o, dims=('time', 'Y', 'X'))
-                data_array.name = output_vars[0] 
-                data_array.to_netcdf(f'{output_folder}/proxy_out_{global_count}.nc')  # Use global counter
+                data_array.name = 'Pressure' 
+                data_array.to_netcdf(f'{output_folder}/proxy_out_{global_count}.nc')
+                print(f'Proxy simulation {global_count} saved')  # Use global counter
                 global_count += 1  # Increment global counter after each file
+
+# %%

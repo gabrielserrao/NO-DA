@@ -35,11 +35,11 @@ class ReadXarrayDataset(Dataset):
     def __init__(self, folder, input_vars, output_vars, num_files=None, wells_positions=False):
         self.folder = folder        
         self.file_list = os.listdir(folder)[:num_files] if num_files else os.listdir(folder)            
-        self.input_vars = input_vars.copy()
+        self.input_vars = input_vars
         self.input_vars.append('x_encoding')
         self.input_vars.append('y_encoding')
         self.input_vars.append('time_encoding')
-        self.output_vars = output_vars.copy()
+        self.output_vars = output_vars
         self.wells_positions = wells_positions
         # self.input_normalizers = []
         # self.output_normalizers = []
