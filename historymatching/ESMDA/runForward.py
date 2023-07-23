@@ -13,6 +13,7 @@ import xarray as xr
 def run_forward(reference_folder,
                 data_folder,
                 numberHFmembers,
+                Ne,
                 output_folder,
                 is_proxy = False,
                 ):  
@@ -32,25 +33,21 @@ def run_forward(reference_folder,
     treatGeoModel = metadata.iloc[7].values[0]
     RefGeoData_path = metadata.iloc[8].values[0]
 
-    
     if is_proxy:
-        path_model = \
-                    '/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure_model.pt'
-        input_vars = ['Por', 'Perm', 'gas_rate']
-        output_vars = ['Pressure'],
-        WELLS_POSITIONS = True
-        device = 'cpu'
+    #chop the data_folder in Ne 
         run_proxy(data_folder, 
-                path_model,                    
-                input_vars,
-                output_vars,
-                WELLS_POSITIONS,
-                device,
-                output_folder)
+                path_model = \
+                    '/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_MonthQgWellCenter_N800.0_ep100_m18_w128_b1_normPointGaussianNormalizer_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure/FNO_3d_MonthQgWellCenter_N800.0_ep100_m18_w128_b1_normPointGaussianNormalizer_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure_model.pt',
+                input_vars = ['Por', 'Perm', 'gas_rate'],
+                output_vars = ['Pressure'],
+                WELLS_POSITIONS = True,
+                device = 'cpu',  # Use GPU
+                output_folder = output_folder,
+                Ne=Ne)
 
     else:
         i=0
-        for realization in os.listdir(data_folder):
+        for realization in os.listdir(data_folder)[:Ne]:
             if i < numberHFmembers:
                 realization = xr.open_dataset(os.path.join(data_folder, realization))
                 run_DARTS_simulation(realization,

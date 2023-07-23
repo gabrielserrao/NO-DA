@@ -64,36 +64,9 @@ NScalar = 0 #we are not considering any scalar parameters in the problem like kr
 Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
-NeHf = 1 #ensemble members for the High Fidelity foward model
-NePx = 300 #ensemble members for the Proxy
+NeHf = 100 #ensemble members for the High Fidelity foward model
+NePx = 900 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
-
-# %%
-#----DEFINE THE PRIOR ENSEMBLE----#
-prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/simulations/it0/geo'
- 
-MGridPrior = np.empty([Nm, Ne])
-for i, file in enumerate(os.listdir(prior_path)):
-    if i < Ne:
-        realization = xr.open_dataset(os.path.join(prior_path,file))
-        Permeability = realization['Perm'].values.flatten()
-        #apply the log transform to the permeability
-        Permeability = np.log(Permeability)
-        Porosity = realization['Por'].values.flatten()
-        MGridPrior[:,i] = np.concatenate((Permeability, Porosity))
-
-
-
-
-
-
-
-# #plot the prior ensemble for the first case 
-# fig, ax = plt.subplots(1,1, figsize=(10,10))
-# #split MPrior into permeability and porosity for this jump the number of grid cells
-# plt.imshow(MPrior[:int(NGrid/2), 0].reshape((Ni,Nj),order='F').T, cmap='RdYlGn_r', aspect='auto')
-# plt.colorbar()
-# plt.show()
 
 
 #%% 
@@ -119,33 +92,35 @@ srcDir =  f'{curDir}'
 SDiag = np.sqrt(CeDiag)
 SInvDiag = np.power(SDiag, -1)
 INd = np.eye(Nd)
-MGrid = MGridPrior
+
 MScalar = []
-ESMDA_its = 2
+ESMDA_its = 4
 alphas=np.ones(ESMDA_its)*ESMDA_its
 MObj=np.zeros([len(alphas),Ne])
 #Run
-def compute_observation_matrix(directory_path, monitoring_positions):
+
+def compute_observation_matrix(directory_path, Ne, monitoring_positions):
     D = []
-    # Loop over all files in the directory
-    for filename in os.listdir(directory_path):
-        # Check if the file is a .nc file
-        if filename.endswith(".nc"):
-            # Load the .nc file
-            model = xr.open_dataset(os.path.join(directory_path, filename))
-            # Extract observation data from the model
-            obsData = []
-            for (i, j) in monitoring_positions:
-                obsData.append(model['Pressure'].isel(X=i).isel(Y=j).values)
-            obsValues = np.array(obsData)
 
-            # Flatten the observation values and append them to the D matrix
-            D.append(obsValues.flatten())
+    # Loop over all proxy files in the directory
+    for i in range(Ne):
+        # If the corresponding HF file exists, load that instead
+        if os.path.isfile(os.path.join(directory_path, f"darts_out_{i}.nc")):
+            model = xr.open_dataset(os.path.join(directory_path, f"darts_out_{i}.nc"))
+        else:
+            model = xr.open_dataset(os.path.join(directory_path, f"proxy_out_{i}.nc"))
 
-    # Convert D to a numpy array
+        # Extract observation data from the model
+        obsData = [model['Pressure'].isel(X=x, Y=y).values for x, y in monitoring_positions]
+
+        # Flatten the observation values and append them to the D matrix
+        D.append(np.array(obsData).flatten())
+    
     D = np.array(D)
+    D = D.T # Nobs x Ne
 
     return D
+
 #%%
 start= time.time()
 l = 0
@@ -153,114 +128,112 @@ for alpha in alphas:
     # Generates the perturbed observations (10.27)
     z = np.random.normal(size=(Nd, Ne))
     DPObs = dObs[:, np.newaxis] + math.sqrt(alpha) * CeDiag[:, np.newaxis] * z
-    # 2. Forecast
-    destDir= os.path.join(curDir,f'simulations/it{l}')
-    geoDir= os.path.join(curDir,f'simulations/it{l}/geo')
-    dynDir= os.path.join(curDir,f'simulations/it{l}/dyn')
-    if l==0:
-        #Define M matrix
-        MGrid = MGridPrior
-        #compute D Matrix
-
-        if not os.path.exists(dynDir):
-            os.makedirs(dynDir)
-        if not os.path.exists(geoDir):
-            os.makedirs(geoDir)        
-        for i in range(Ne):
-            if i < NeHf:
-                run_forward(reference_folder,
-                            data_folder = geoDir,
-                            numberHFmembers =NeHf,
-                            output_folder=dynDir,
-                            is_proxy = False,
-                            )
-            else:
-                run_forward(reference_folder,
-                            data_folder = geoDir,
-                            numberHFmembers=NeHf,
-                            output_folder=dynDir,
-                            is_proxy = True,
-                            )
-        #%%
-        D = compute_observation_matrix(dynDir, monitoring_positions)
-        pd.DataFrame(D).to_pickle(f'{destDir}/D_{l}.pkl')
-
-                
-        #%%
-        llllk
-        #read the results of the forward model  
-  
-        #compute the objective function
-        MObj[l,:]=calcDataMismatchObjectiveFunction(dObs[:,np.newaxis], D, CeInv)
-        pd.DataFrame(MObj[l,:]).to_pickle(f'{destDir}/MObj_{l}.pkl')
-        #compute the mean of the objective function
-        MObjMean = np.mean(MObj, axis=1)
-            
-
-        prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/prior_geomodels'
-        
     
+    prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/prior_geomodels'
+
     destDir= os.path.join(curDir,f'simulations/it{l}')
-    #check if the directory exists, if not create it
+    geoDir= os.path.join(destDir,f'geo')
+    dynDir= os.path.join(destDir,f'dyn')  
     if not os.path.exists(destDir):
-        os.makedirs(destDir)
-    #compute the forward model for the ensemble members
-    run_forward(reference_folder,
-                data_folder = destDir,
-                numberHFmembers,
-                output_folder=destDir,
-                is_proxy = False,
-                ):  
-
-  
-
-    
+        os.makedirs(destDir)  
+    if not os.path.exists(dynDir):
+        os.makedirs(dynDir)
+    if not os.path.exists(geoDir):
+        os.makedirs(geoDir) 
     
 
-   
-    # Run the simulations g(M) (12.4)
-    mGridHf mGrid[:NeHf]     
-    inputParamsHf['Permeability'] = mGridHf
-    RunDarts(inputParamsHf, destDirHF, l)
-    filename = os.path.join(destDir,f'data_model'+str(Ne-1)+'.pkl')
-    check_job(filename)
-    D_Hf =ReadHFResults(destDirHF,l)
-    pd.DataFrame(D_Hf).to_pickle(f'{destDir}/D_{l}.pkl')
+    if l==0: 
+        MGridPrior = np.empty([Nm, Ne])        
+        for i, file in enumerate(os.listdir(prior_path)):
+            if i < Ne:
+                realization = xr.open_dataset(os.path.join(prior_path,file))
+                realization.to_netcdf(f'{geoDir}/geo_{i}.nc')
+                Permeability = realization['Perm'].values.flatten()
+                #apply the log transform to the permeability
+                Permeability = np.log(Permeability)
+                Porosity = realization['Por'].values.flatten()
+                MGridPrior[:,i] = np.concatenate((Permeability, Porosity))
+                #save MGridPrior to pickle
+                pd.DataFrame(MGridPrior).to_pickle(f'{destDir}/MGrid_{l}.pkl')
+                MGrid = MGridPrior
+                
 
-    mGridPx = mGrid[:NePx]     
-    inputParamsPx['Permeability'] = mGridPx
-    RunProxy(inputParamsPx, destDirPx, l)
-    filename = os.path.join(destDir,f'data_model'+str(Ne-1)+'.pkl')
-    check_job(filename)
-    D_Px =ReadPxResults(destDirPx,l)
-    pd.DataFrame(D_Px).to_pickle(f'{destDir}/D_{l}.pkl')
+         
+        run_forward(reference_folder,
+            data_folder = geoDir,
+            numberHFmembers =NeHf,
+            Ne = Ne,
+            output_folder=dynDir,
+            is_proxy = False,
+            )
+        #runs proxy
+        run_forward(reference_folder,
+                    data_folder = geoDir,
+                    numberHFmembers=NeHf,
+                    Ne = Ne,
+                    output_folder=dynDir,
+                    is_proxy = True,
+                    )
+        
+    else:
+    #read MGrid from the previous iteration
+        destDir= os.path.join(curDir,f'simulations/it{l-1}')
+        MGrid = pd.read_pickle(f'{destDir}/MGrid_{l-1}.pkl') 
+        MGrid = MGrid.values
+        destDir= os.path.join(curDir,f'simulations/it{l}')  
+        geoDir= os.path.join(destDir,f'geo')
+        dynDir= os.path.join(destDir,f'dyn')    
+        for i, file in enumerate(os.listdir(prior_path)):
+            if i < Ne:
+                print(i)
+                Permeability = MGrid[:int(NGrid/2),i]
+                Porosity = MGrid[int(NGrid/2):,i]                
+                Permeability = np.exp(Permeability)
+                Permeability = Permeability.reshape((Ni,Nj),order='F')
+                Porosity = Porosity.reshape((Ni,Nj),order='F')
+                #overwrite the values of the permeability and porosity in the realization
+                realization = xr.open_dataset(os.path.join(prior_path,file))
+                realization['Perm'].values = Permeability
+                realization['Por'].values = Porosity
+                realization.to_netcdf(f'{geoDir}/geo_{i}.nc')
 
-    D = np.concatenate([D_Hf, D_Px])
-    pd.DataFrame(D_Px).to_pickle(f'{destDir}/D_{l}.pkl')
-    
-    if (l == 0):
-        DPrior = D
+                print('saveed geomodel to netcdf')
+            
+        print('Running...')
 
+        #runs DARTS
+        run_forward(reference_folder,
+            data_folder = geoDir,
+            numberHFmembers =NeHf,
+            Ne = Ne,
+            output_folder=dynDir,
+            is_proxy = False,
+            )
+        #runs proxy
+        run_forward(reference_folder,
+                    data_folder = geoDir,
+                    numberHFmembers=NeHf,
+                    Ne = Ne,
+                    output_folder=dynDir,
+                    is_proxy = True,
+                    )
+    D = compute_observation_matrix(dynDir, Ne, monitoring_positions)
+    pd.DataFrame(D).to_pickle(f'{destDir}/D_{l}.pkl')    
     DobsD = DPObs - D
-
-    # 4. Analysis
-    # 4.1 Invert matrix C
-    # Calculates DeltaD (12.5)
+    
     meanMatrix = np.mean(D, axis=1)
+    
     DeltaD = D - meanMatrix[:, np.newaxis]
-    # Calculates CHat (12.10)
+
     CHat = SInvDiag[:, np.newaxis] * \
         (DeltaD @ DeltaD.T) * \
         SInvDiag[np.newaxis, :] + alpha * (Ne - 1) * INd
 
-    # Calculates Gamma and X (12.18)
     U, SigmaDiag, Vt = np.linalg.svd(CHat)
     Nr = FindTruncationNumber(SigmaDiag, csi)
 
     GammaDiag = np.power(SigmaDiag[0:Nr], -1)
-    X = SInvDiag[:, np.newaxis] * U[:, 0:Nr]
-
-    # Calculates M^a (12.21)
+    X = SInvDiag[:, np.newaxis] * U[:, 0:Nr]   
     X1 = GammaDiag[:, np.newaxis] * X.T
     X8 = DeltaD.T @ X
     X9 = X8 @ X1
@@ -270,11 +243,13 @@ for alpha in alphas:
     #test without localization
     MGrid = UpdateModel(MGrid, X9, DobsD)
     pd.DataFrame(MGrid).to_pickle(f'{destDir}/MGrid_{l}.pkl')
-   
-    CeInv = np.power(CeDiag, -1)
+ 
+    CeInv = np.power(CeDiag, -1)  
+    #compute the objective function
     MObj[l,:]=calcDataMismatchObjectiveFunction(dObs[:,np.newaxis], D, CeInv)
     pd.DataFrame(MObj[l,:]).to_pickle(f'{destDir}/MObj_{l}.pkl')
-    
+
+    #compute the mean of the objective function
     MObjMean = np.mean(MObj, axis=1)
     fig, ax = plt.subplots(figsize=(10,5))
     ax.plot(MObjMean, color='r', alpha=0.8)
@@ -282,8 +257,7 @@ for alpha in alphas:
     ax.set_xlabel('Iteration')
     ax.set_yscale('log')
     ax.set_ylabel(f'Mean of Objective function until ES-MDA iteration {l}')
-    fig.savefig(f'{destDir}/Mean_of_Objective_function_{l}.jpg')
-    
+    fig.savefig(f'{destDir}/Mean_of_Objective_function_{l}.jpg')  
 
     l += 1
 
@@ -296,8 +270,5 @@ elapsed = end - start
 print('Elapsed time of the ES-MDA: ', elapsed)
 
            
-# # %%
-# plt.imshow(MPrior[int(NGrid/2):, 0].reshape((Ni,Nj),order='F').T, cmap='RdYlGn_r', aspect='auto')
-# plt.show()
 
 # %%
