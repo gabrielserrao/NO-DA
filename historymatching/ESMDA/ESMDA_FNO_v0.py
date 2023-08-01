@@ -11,7 +11,7 @@ import pandas as pd
 import pickle
 import glob
 import xarray as xr
-from runForward import run_forward
+from runForwardPara import run_forward
 from utilsESMDA import  ModelOut, deleteOutFiles, media_function, get_grid_outputs
 from utilsESMDA import  CalcHL, SphereFunction, GaspariCohnFunction, IndexToIJ, IJToIndex, BuildPermCovMatrix, \
     BuildLocalizationMatrix, PlotModelRealization, PlotMatrix, RunModels, check_job, ReadModels, \
@@ -65,8 +65,8 @@ NScalar = 0 #we are not considering any scalar parameters in the problem like kr
 Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
-NeHf = 0 #ensemble members for the High Fidelity foward model
-NePx = 10 #ensemble members for the Proxy
+NeHf = 200 #ensemble members for the High Fidelity foward model
+NePx = 400 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
 
 path_case = f'simulations_PERM_HF{NeHf}_PX{NePx}'

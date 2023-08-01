@@ -41,7 +41,7 @@ class DataComparer:
         data = pd.read_pickle(os.path.join(self.data_folder_path, filename))
         return np.array(data.values) if isinstance(data, pd.DataFrame) else data
 
-    def compare_data(self, DPrior, dObs, DPosterior, CeDiag, time_range, title, num_realizations=100, y_limits=[200,320]):
+    def compare_data(self, DPrior, dObs, DPosterior, CeDiag, time_range, num_realizations=100, y_limits=[200,320]):
         DPrior_reshaped = DPrior.reshape((4, len(time_range), -1))[:, :, :num_realizations]
         dObs_reshaped = dObs.reshape((4, len(time_range)))
         DPosterior_reshaped = DPosterior.reshape((4, len(time_range), -1))[:, :, :num_realizations]
@@ -72,17 +72,26 @@ class DataComparer:
             ax.set_ylabel('Pressure (bar)')
             ax.legend()
         
-        plt.suptitle(title)  
         plt.tight_layout()
         plt.show()
-        plt.savefig(f'Observation Data vs DPrior vs DPosterior for Monitoring Point_{title}.png')
+       
 
-    def process_data(self, prior_filename, posterior_filename, title, num_realizations=100):
+    def process_data(self, prior_filename, posterior_filename, num_realizations=100):
         DPrior = self.load_data(prior_filename)
         DPosterior = self.load_data(posterior_filename)
         dObs = self.get_observation_data()
         CeDiag = np.where(np.array(0.05*dObs[:])<1e-3, 1e-3, 0.01*dObs[:])
-        self.compare_data(DPrior, dObs, DPosterior, CeDiag, self.time_range, num_realizations, title)
+        self.compare_data(DPrior, dObs, DPosterior, CeDiag, self.time_range, num_realizations)
+
+
+    def plot_observation_points(self):
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    ax.imshow(self.reference_model['Perm'].values, cmap='viridis')
+    for (i,j) in self.monitoring_positions:
+        ax.plot(i, j, 'o', color='red', markersize=10)
+    ax.set_title('Observation Points in the Permeability Field')
+    plt.tight_layout()
+    plt.show()
 
 #%%
 if __name__ == "__main__":
