@@ -11,6 +11,8 @@ runs/
 *.out
 *.err
 *.nc
+*.log
+*.pkl
 
 
 

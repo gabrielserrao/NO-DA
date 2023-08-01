@@ -56,7 +56,7 @@ NTimesteps=len(time_range)
 #wellDObs = np.repeat(wells, NTimesteps) # Configure the wells list
 
 # %% [markdown]
-grid_variables = 2 #number of variables in the grid for the DA (permeability, porosity)
+grid_variables = 1 #number of variables in the grid for the DA (permeability,)
 Ni = len(reference_model.X.values)
 Nj = len(reference_model.X.values)
 NGrid = Ni * Nj * grid_variables
@@ -64,8 +64,8 @@ NScalar = 0 #we are not considering any scalar parameters in the problem like kr
 Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
-NeHf = 0 #ensemble members for the High Fidelity foward model
-NePx = 1000 #ensemble members for the Proxy
+NeHf = 50 #ensemble members for the High Fidelity foward model
+NePx = 0 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
 
 
@@ -131,7 +131,7 @@ for alpha in alphas:
     
     prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/prior_geomodels'
 
-    destDir= os.path.join(curDir,f'simulations_Px/it{l}')
+    destDir= os.path.join(curDir,f'simulations_HF50_0/it{l}')
     geoDir= os.path.join(destDir,f'geo')
     dynDir= os.path.join(destDir,f'dyn')  
     if not os.path.exists(destDir):
@@ -178,10 +178,10 @@ for alpha in alphas:
         
     else:
     #read MGrid from the previous iteration
-        destDir= os.path.join(curDir,f'simulations_Px/it{l-1}')
+        destDir= os.path.join(curDir,f'simulations_HF50_0/it{l-1}')
         MGrid = pd.read_pickle(f'{destDir}/MGrid_{l-1}.pkl') 
         MGrid = MGrid.values
-        destDir= os.path.join(curDir,f'simulations_Px/it{l}')  
+        destDir= os.path.join(curDir,f'simulations_HF50_0/it{l}')  
         geoDir= os.path.join(destDir,f'geo')
         dynDir= os.path.join(destDir,f'dyn')    
         for i, file in enumerate(os.listdir(prior_path)):

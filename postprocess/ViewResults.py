@@ -18,6 +18,7 @@ import torchmetrics
 print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
 import os
+from torchinfo import summary
 print(os.getcwd())
 
 # %%
@@ -136,6 +137,7 @@ else:
 device = torch.device("cpu")
 model = torch.load(path_model, map_location=device).to(device)  # load the model to CPU
 model.eval()  # set the model to evaluation mode
+summary(model, input_size=(1, 61, 32, 32, 6))
 #extract main parameters of model and print them like padding, number of layers, etc
 print('Model loaded')
 #print number of parameters of model
