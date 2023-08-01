@@ -4,3 +4,5 @@
 path/to/your/large/file.log filter=lfs diff=lfs merge=lfs -text
 error_ESMDA.log filter=lfs diff=lfs merge=lfs -text
 output_ESMDA.log filter=lfs diff=lfs merge=lfs -text
+historymatching/ESMDA/output_ESMDAHF.log filter=lfs diff=lfs merge=lfs -text
+historymatching/ESMDA/output_ESMDA.log filter=lfs diff=lfs merge=lfs -text
