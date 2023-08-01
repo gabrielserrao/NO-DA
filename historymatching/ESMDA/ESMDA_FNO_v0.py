@@ -40,7 +40,8 @@ RefGeoData_path = metadata.iloc[8].values[0]
 #----DEFINE OBSERVATION DATA----#
 #define grid locations of the monitoring points on the 32x32 grid (for all time steps)
 monitoring_numbers = 4
-monitoring_positions = [[2,2], [18,2] ,[2,18], [18,18]] #wells position in the 20x20 grid
+monitoring_positions = [[11, 11], [11, 21], [21, 11], [21, 21]]
+#[[2,2], [18,2] ,[2,18], [18,18]] #wells position in the 20x20 grid
 
 obsData = []
 for (i,j) in monitoring_positions:
@@ -64,10 +65,11 @@ NScalar = 0 #we are not considering any scalar parameters in the problem like kr
 Nm = NGrid + NScalar
 Nd = len(dObs)  #len(dTime)* obsValues.shape[0] #  timesteps * 4 well datas
 
-NeHf = 50 #ensemble members for the High Fidelity foward model
-NePx = 0 #ensemble members for the Proxy
+NeHf = 0 #ensemble members for the High Fidelity foward model
+NePx = 10 #ensemble members for the Proxy
 Ne = NeHf + NePx #number of ensemble members
 
+path_case = f'simulations_PERM_HF{NeHf}_PX{NePx}'
 
 #%% 
 #------BUILD LOCALIZATION MATRIX------# 
@@ -131,7 +133,7 @@ for alpha in alphas:
     
     prior_path = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/prior_geomodels'
 
-    destDir= os.path.join(curDir,f'simulations_HF50_0/it{l}')
+    destDir= os.path.join(curDir,f'{path_case}/it{l}')
     geoDir= os.path.join(destDir,f'geo')
     dynDir= os.path.join(destDir,f'dyn')  
     if not os.path.exists(destDir):
@@ -151,8 +153,8 @@ for alpha in alphas:
                 Permeability = realization['Perm'].values.flatten()
                 #apply the log transform to the permeability
                 Permeability = np.log(Permeability)
-                Porosity = realization['Por'].values.flatten()
-                MGridPrior[:,i] = np.concatenate((Permeability, Porosity))
+                #Porosity = [] #realization['Por'].values.flatten()
+                MGridPrior[:,i] = Permeability #np.concatenate((Permeability, Porosity))
                 #save MGridPrior to pickle
                 pd.DataFrame(MGridPrior).to_pickle(f'{destDir}/MGrid_{l}.pkl')
                 MGrid = MGridPrior
@@ -178,27 +180,27 @@ for alpha in alphas:
         
     else:
     #read MGrid from the previous iteration
-        destDir= os.path.join(curDir,f'simulations_HF50_0/it{l-1}')
+        destDir= os.path.join(curDir,f'{path_case}/it{l-1}')
         MGrid = pd.read_pickle(f'{destDir}/MGrid_{l-1}.pkl') 
         MGrid = MGrid.values
-        destDir= os.path.join(curDir,f'simulations_HF50_0/it{l}')  
+        destDir= os.path.join(curDir,f'{path_case}/it{l}')  
         geoDir= os.path.join(destDir,f'geo')
         dynDir= os.path.join(destDir,f'dyn')    
         for i, file in enumerate(os.listdir(prior_path)):
             if i < Ne:
                 print(i)
-                Permeability = MGrid[:int(NGrid/2),i]
-                Porosity = MGrid[int(NGrid/2):,i]                
+                Permeability = MGrid[:,i]#MGrid[:int(NGrid/2),i]
+                #Porosity = MGrid[int(NGrid/2):,i]                
                 Permeability = np.exp(Permeability)
                 Permeability = Permeability.reshape((Ni,Nj),order='F')
-                Porosity = Porosity.reshape((Ni,Nj),order='F')
+                #Porosity = Porosity.reshape((Ni,Nj),order='F')
                 #overwrite the values of the permeability and porosity in the realization
                 realization = xr.open_dataset(os.path.join(prior_path,file))
                 realization['Perm'].values = Permeability
-                realization['Por'].values = Porosity
+                #realization['Por'].values = Porosity
                 realization.to_netcdf(f'{geoDir}/geo_{i}.nc')
 
-                print('saveed geomodel to netcdf')
+                print('saved geomodel to netcdf')
             
         print('Running...')
 
