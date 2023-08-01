@@ -2,6 +2,8 @@ dataset/
 model/
 results/
 runs/
+historymatching/ESMDA/
+
 
 #Ignore all images#
 *.png
