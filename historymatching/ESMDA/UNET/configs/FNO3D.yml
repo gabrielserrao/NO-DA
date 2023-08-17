@@ -1,0 +1,48 @@
+case_args:
+  normalizer: 'Gaussian'
+  normalizer_path: 'trained_preprocessors/preprocessor_gaussian_32x32_Pressure.pkl'
+  
+
+
+
+data_args:
+  file_path: '/samoa/data/smrserraoseabr/subsurface-DA-with-generative-models/data/32x32'
+  num_samples: 100
+
+
+
+
+dataloader_args:
+  batch_size: 10
+  num_workers: 4
+  shuffle: True
+  
+
+model_args:
+  modes1: 18
+  modes2: 18
+  modes3: 18
+  width: 128
+  padding: 4
+  input_channels: 6
+
+    
+optimizer_args:
+  learning_rate: 5.0e-4
+  weight_decay: 0 #1.0e-8
+  scheduler_args:
+    type: 'plateau'
+    args:
+      patience: 10
+      factor: 0.9
+      min_lr: 1.0e-6
+  #     #warmup: 10
+  #     #total_steps: 1000
+
+train_stepper_args:
+  #model_save_path: 'trained_models/FNO3D'
+  
+
+
+trainer_args:
+  num_epochs: 500

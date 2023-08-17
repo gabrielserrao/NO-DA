@@ -17,6 +17,10 @@ print(torch.__version__)
 print(f"GPUs:{torch.cuda.device_count()}")
 import os
 print(os.getcwd())
+
+#using torch 2.0
+from torch.cuda.amp import autocast, GradScaler
+
 #%%
 ################################################################
 # configs-1
@@ -24,18 +28,18 @@ print(os.getcwd())
 torch.manual_seed(1)
 np.random.seed(1)
 
-tag = 'MonthQgWellCenter_TESTE' 
-folder = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+tag = 'MonthQgWellCenter_HM' 
+folder = '/samoa/data/smrserraoseabr/NO-DA/historymatching/ESMDA/simulations_PERM_HF100_PX0/it0/dyn' # '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels_wells/filtered"  #  "/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 input_vars = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 output_vars = ['Pressure'] 
-num_files= 200
+num_files= 100
 traintest_split = 0.8
 batch_size = 1
 normalizer = 'PointGaussianNormalizer'
 WELLS_POSITIONS = True
 learning_rate = 0.001
 epochs = 100
-modes = 6
+modes = 12
 width = 128
 
 ntrain = num_files*traintest_split
@@ -149,9 +153,14 @@ print('preprocessing finished, time used:', t2-t1)
 model = FNO3d(modes, modes, modes, width)
 print_memory_usage()
 model.to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+#print(summary(model, input_size=(batch_size, 61, 32, 32, 6)))
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)# weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iterations)
 myloss = LpLoss(size_average=False)
+
+
+scaler = GradScaler()
+
 
 for ep in range(epochs):
     print(f'epoch {ep} of {epochs}')
@@ -168,16 +177,22 @@ for ep in range(epochs):
         y = output_normalizer.encode(y) 
 
         optimizer.zero_grad()
+        
+        #with autocast():
         out = model(x)
 
         mse = F.mse_loss(out, y, reduction='mean')
         # mse.backward()
-
         y = output_normalizer.decode(y)
         out = output_normalizer.decode(out)
+        
         l2 = myloss(out.view(batch_size, -1), y.view(batch_size, -1))
+        #scaler.scale(l2).backward()
         l2.backward()
 
+        #scaler.step(optimizer)
+        #scaler.update()
+                      
         optimizer.step()
         scheduler.step()
         train_mse += mse.item()

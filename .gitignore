@@ -15,6 +15,7 @@ runs/
 *.nc
 *.log
 *.pkl
-
-
+*npy
+*pyc
+*pt
 

@@ -25,17 +25,18 @@ print(os.getcwd())
 ###############################################
 #INTIAL CONFIGS
 # DATASET
-TAG = 'MonthQgWellRand'
-FOLDER = '../dataset/DARTS/runnedmodels_wells/filtered' #'/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"../dataset/DARTS/runnedmodels_wells/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+
+TAG = 'MonthQgWellCenter_HM'
+FOLDER = '../dataset/DARTS/runnedmodels/filtered' #'/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"../dataset/DARTS/runnedmodels_wells/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 OUTPUT_VARS = ['Pressure'] 
 #CONFIGS OF THE MODEL TO GENERATE RESULTS
 BASE_PATH = '/samoa/data/smrserraoseabr/NO-DA/runs'
-NUM_FILES= 1000
+NUM_FILES= 100
 TRAINTEST_SPLIT = 0.8
 BATCH_SIZE = 1
 EPOCHS = 100
-MODES = 18
+MODES = 12
 WIDTH = 128
 NORMALIZER = 'PointGaussianNormalizer'
 WELLS_POSITIONS = True
@@ -137,7 +138,7 @@ else:
 device = torch.device("cpu")
 model = torch.load(path_model, map_location=device).to(device)  # load the model to CPU
 model.eval()  # set the model to evaluation mode
-summary(model, input_size=(1, 61, 32, 32, 6))
+#summary(model, input_size=(1, 61, 32, 32, 6))
 #extract main parameters of model and print them like padding, number of layers, etc
 print('Model loaded')
 #print number of parameters of model
@@ -314,6 +315,7 @@ if EVALUATE_METRICS:
 #%%
 predicted_distances = []
 true_distances = []
+
 for batch_idx, (x, y) in enumerate(test_loader):        
         if batch_idx in BATCH_TO_PLOT:
             #check if batch_idx is in samples to plot

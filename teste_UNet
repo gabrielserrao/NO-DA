@@ -1,0 +1,127 @@
+#%%
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn import TransformerEncoder, TransformerEncoderLayer, TransformerDecoder, TransformerDecoderLayer
+
+class encoder_block(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(2, 2)
+
+    def forward(self, x):
+        return self.pool(self.relu(self.conv(x)))
+
+class decoder_block(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.upconv(x))
+
+class conv_block(nn.Module):
+    def __init__(self, in_channels, mid_channels, out_channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1)
+        self.relu = nn.ReLU()
+        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(mid_channels)
+        self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.bn1(self.conv2(x))
+        x = self.bn2(self.conv3(x))
+        return x
+
+class UnetModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoders = nn.ModuleList([
+            encoder_block(3, 64),
+            encoder_block(64, 128),
+            encoder_block(128, 256),
+        ])
+        self.middle_conv1 = conv_block(256, 512, 64)
+        self.middle_conv2 = conv_block(64, 512, 64)
+        self.decoders = nn.ModuleList([
+            decoder_block(64, 256),
+            decoder_block(256, 128),
+            decoder_block(128, 64),
+        ])
+
+    def forward(self, x):
+        for encoder in self.encoders:
+            x = encoder(x)
+        x = self.middle_conv1(x)
+        x = self.middle_conv2(x)
+        for decoder in self.decoders:
+            x = decoder(x)
+        return x
+
+class UNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.gelu = nn.GELU()
+        self.unet_model = UnetModel()
+        self.flatten = nn.Flatten() # Add a Flatten layer to reshape the tensor
+        self.fc1 = nn.Linear(64 * height // 8 * width // 8, 128)
+        self.positional_encoding = nn.Dropout(0.1)
+        self.conv1d = nn.Conv1d(128, 1, kernel_size=1)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, 128)
+        self.bn1d = nn.BatchNorm1d(128)
+
+        # Transformer layers
+        self.transformer_decoder = nn.TransformerDecoder(
+            TransformerDecoderLayer(128, 4), num_layers=3
+        )
+        self.transformer_encoder = nn.TransformerEncoder(
+            TransformerEncoderLayer(128, 4), num_layers=3
+        )
+
+        self.conv3d_1 = nn.Conv3d(128, 64, kernel_size=3, padding=1)
+        self.conv3d_2 = nn.Conv3d(64, 1, kernel_size=1)
+
+    def forward(self, x):
+        x = self.gelu(x)
+        x = self.unet_model(x)
+        x = self.flatten(x) # Flatten the tensor before passing it through the Linear layer
+        x = self.fc1(x)
+        x = self.positional_encoding(x)
+        x = self.conv1d(x)
+        x = self.fc2(x)
+        
+        x = self.fc3(x)
+        x = self.bn1d(x)
+        x = self.transformer_decoder(x, x)
+        x = self.transformer_encoder(x)
+        x = self.conv3d_1(x)
+        x = self.conv3d_2(x)
+        return x
+
+
+batch_size = 4
+channels = 3
+height = 128
+width = 128
+
+# Create a random tensor with the defined input size
+input_tensor = torch.rand(batch_size, channels, height, width)
+
+# Create an instance of the UNet model
+model = UNet()
+
+# Switch to evaluation mode (optional, but good practice for models with batch normalization or dropout)
+model.eval()
+
+# Perform a forward pass through the model with the random input
+output = model(input_tensor)
+
+# Print the output shape
+print("Output shape:", output.shape)

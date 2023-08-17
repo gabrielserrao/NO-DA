@@ -24,8 +24,9 @@ print(os.getcwd())
 ###############################################
 #INTIAL CONFIGS
 # DATASET
-TAG = 'MonthQgWellRand'
-FOLDER = '../dataset/DARTS/runnedmodels_wells/filtered' #'/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"../dataset/DARTS/runnedmodels_wells/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
+
+TAG = 'MonthQgWellCenter'
+FOLDER = '/samoa/data/smrserraoseabr/NO-DA/dataset/DARTS/runnedmodels/filtered' #'/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32' #"../dataset/DARTS/runnedmodels_wells/filtered"  #"/nethome/atena_projetos/bgy3/NO-DA/datasets/results" + str(resolution) + "/"
 INPUT_VARS = ['Por', 'Perm', 'gas_rate'] # Porosity, Permeability, ,  Well 'gas_rate', Pressure + x, y, time encodings 
 OUTPUT_VARS = ['Pressure'] 
 #CONFIGS OF THE MODEL TO GENERATE RESULTS

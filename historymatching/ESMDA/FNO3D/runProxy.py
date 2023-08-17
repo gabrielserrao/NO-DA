@@ -11,7 +11,8 @@ sys.path.append(".")
 
 def run_proxy(data_folder, 
                 path_model = \
-                    '/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure_model.pt',
+                    #'/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure/FNO_3d_N800.0_ep110_m18_w128_b10_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure_model.pt',
+                    '/samoa/data/smrserraoseabr/NO-DA/runs/FNO_3d_MonthQgWellCenter_HM_N80.0_ep100_m12_w128_b1_normPointGaussianNormalizer_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure/FNO_3d_MonthQgWellCenter_HM_N80.0_ep100_m18_w128_b1_normPointGaussianNormalizer_INPUT_Por_Perm_gas_rate_OUTPUT_Pressure_model.pt',
                 input_vars = ['Por', 'Perm', 'gas_rate'],
                 output_vars = ['Pressure'],
                 WELLS_POSITIONS = True,

@@ -9,7 +9,24 @@ import pickle
 import os
 import numpy as np
 import xarray as xr
+from multiprocessing import Pool
+from functools import partial
 #%%
+def run_simulation_for_realization(i, realization_file, treatGeoModel, dt, nsteps, well_coords, well_rates, initial_gas_rate, output_folder, numberHFmembers, data_folder):
+    if i < numberHFmembers:
+        realization_path = os.path.join(data_folder, realization_file)
+        realization = xr.open_dataset(realization_path)
+        run_DARTS_simulation(realization,
+                             treatGeoModel,
+                             dt, 
+                             nsteps,
+                             well_coords,
+                             well_rates,
+                             initial_gas_rate,
+                             output_filename=f'{output_folder}/darts_out_{i}.nc')
+
+
+
 def run_forward(reference_folder,
                 data_folder,
                 numberHFmembers,
@@ -46,19 +63,31 @@ def run_forward(reference_folder,
                 Ne=Ne)
 
     else:
-        i=0
-        for realization in os.listdir(data_folder)[:Ne]:
-            if i < numberHFmembers:
-                realization = xr.open_dataset(os.path.join(data_folder, realization))
-                run_DARTS_simulation(realization,
-                                treatGeoModel,
-                                dt, 
-                                nsteps,
-                                well_coords,
-                                well_rates,
-                                initial_gas_rate,
-                                output_filename=f'{output_folder}/darts_out_{i}.nc')
-            i+=1	
+        realization_files = os.listdir(data_folder)[:Ne]
+        run_simulation_partial = partial(run_simulation_for_realization,
+                                         treatGeoModel=treatGeoModel,
+                                         dt=dt,
+                                         nsteps=nsteps,
+                                         well_coords=well_coords,
+                                         well_rates=well_rates,
+                                         initial_gas_rate=initial_gas_rate,
+                                         output_folder=output_folder,
+                                         numberHFmembers=numberHFmembers,
+                                         data_folder=data_folder)
+
+        print("Starting simulations...")
+        with Pool() as pool:
+            pool.starmap(run_simulation_partial, enumerate(realization_files))
+            pool.close()
+            pool.join()
+        print("Simulations finished.")
+        # with Pool() as pool:
+        #     results = [pool.apply_async(run_simulation_partial, args=(i, realization_file)) for i, realization_file in enumerate(realization_files)]
+        # for result in results:
+        #     result.get()
+
+
+            
 
 
 

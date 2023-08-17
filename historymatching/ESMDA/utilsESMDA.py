@@ -14,6 +14,33 @@ import pickle
 import glob
 #%%
 #function to create a xarray from DARTS results 
+
+def compute_observation_matrix(directory_path, Ne, monitoring_positions, variable, last_data_for_HM):
+    D = []
+
+    # Loop over all proxy files in the directory
+    for i in range(Ne):
+        # If the corresponding HF file exists, load that instead
+        if os.path.isfile(os.path.join(directory_path, f"darts_out_{i}.nc")):
+            model = xr.open_dataset(os.path.join(directory_path, f"darts_out_{i}.nc"))
+        else:
+            model = xr.open_dataset(os.path.join(directory_path, f"proxy_out_{i}.nc"))
+
+        # Extract observation data from the model
+        obsData = [model[variable].isel(X=x, Y=y).values for x, y in monitoring_positions]
+        #remove the first time step of all the observations
+        #TODO: verify this
+        obsData = [obsData[i][:last_data_for_HM] for i in range(len(obsData))]
+
+        # Flatten the observation values and append them to the D matrix
+        D.append(np.array(obsData).flatten())
+    
+    D = np.array(D)
+    D = D.T # Nobs x Ne
+
+    return D
+
+
 def ModelOut(m):
     re_time_data = re.compile('(?P<origin>\w*?)[\s:]*(?P<name>[\w\s]+) \(?(?P<unit>[\w\/]+)\)?')
 
@@ -284,11 +311,15 @@ def UpdateModelLocalized(M, Psi, R, DobsD):
     Kloc = R * K
     return M + Kloc @ DobsD
 
+
+
 def UpdateModel(M, Psi, DobsD):
     DeltaM = CentralizeMatrix(M)
 
     X10 = Psi @ DobsD
     return M + DeltaM @ X10
+   
+
 
 def calcDataMismatchObjectiveFunction(dObs, D, CeInv):
     Ne = D.shape[1]

@@ -12,7 +12,7 @@ from utilsDARTS import ModelOut, InitializeDataVars, StoreSimValues,create_wells
 import os
 from runDARTS import run_DARTS_simulation
 # %%
-RefGeoData_path = '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32/simulation_results_realization_32x32_1000.nc'
+RefGeoData_path = '/samoa/data/smrserraoseabr/NO-DA/dataset/mixedcontext32x32/simulation_results_realization_32x32_501.nc'
 RefGeoData = xr.open_dataset(RefGeoData_path)
 treatGeoModel =False
 dt = 30
@@ -24,7 +24,7 @@ initial_gas_rate = initial_gas_rate * (1 + 0.5 * np.random.randn())
 well_rates = initial_gas_rate * np.exp(-np.linspace(0, 1, nsteps))
 
 output_folder='.'
-output_filename = os.path.join(output_folder,f'../REFERENCE/ReferenceSimulation.nc')
+output_filename = os.path.join(output_folder,f'../REFERENCE/ReferenceSimulation_501.nc')
 combined_data = run_DARTS_simulation(realization = RefGeoData,
                                     treatGeoModel = treatGeoModel,
                                     dt=dt,
@@ -48,7 +48,7 @@ metadata = {'dt': dt,
 
 
 metadata_df = pd.DataFrame.from_dict(metadata, orient='index')
-metadata_df.to_pickle(os.path.join(output_folder,f'../REFERENCE/Reference_metadata.pkl'))
+metadata_df.to_pickle(os.path.join(output_folder,f'../REFERENCE/Reference_metadata_501.pkl'))
 
 
 
